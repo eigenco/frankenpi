@@ -6,4 +6,6 @@ Currently RP can act as hard disk using an image and the PC can boot with the he
 Adlib emulation is also working through the Pi.
 Some preliminary work to support PCB through Sound Blaster and optical SPDIF has also been done, but these are not yet working.
 
+Ultimately I probably want to modify the arrangement so that the FPGA will serve BIOS extension instead of having to rely on hacked VGABIOS for booting.
+
 Youtube link here: 
