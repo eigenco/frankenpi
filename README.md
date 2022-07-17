@@ -8,4 +8,4 @@ Some preliminary work to support PCB through Sound Blaster and optical SPDIF has
 
 Ultimately I probably want to modify the arrangement so that the FPGA will serve BIOS extension instead of having to rely on hacked VGABIOS for booting.
 
-Youtube link here: 
+Youtube link here: https://www.youtube.com/watch?v=1ej76w8sHxY
