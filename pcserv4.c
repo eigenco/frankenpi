@@ -157,8 +157,9 @@ int main(void) {
             //printf("Block: %d\n", linear_address/512);
           }
           if(chs_state==3) {
-            //printf("Write: %d\n", linear_address & 511);
-            hdd[linear_address++] = data;
+            hdd[linear_address] = data;
+            printf("Write: %d\n", linear_address & 511);
+            linear_address++;
           }
           if(chs_state<3) chs_state = chs_state + 1;
         }

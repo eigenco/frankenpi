@@ -68,8 +68,6 @@ read:
 	iret
 
 INT13_write:
-	xor	ah, ah
-	iret
 	push    ax
 	push	bx
 	push	cx
@@ -135,4 +133,4 @@ INT13_type:
 
 times 32767-($-$$) db 0
 ;	db	0
-	db	-125
+	db	-116
