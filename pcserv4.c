@@ -154,9 +154,12 @@ int main(void) {
           if(chs_state==2) {
             s = data;
             linear_address = 512*((c*16+h)*63+s-1);
-            //printf("%d/%d/%d/%d\n", c, h, s, linear_address);
+            //printf("Block: %d\n", linear_address/512);
           }
-          if(chs_state==3) hdd[linear_address++] = data;
+          if(chs_state==3) {
+            //printf("Write: %d\n", linear_address & 511);
+            hdd[linear_address++] = data;
+          }
           if(chs_state<3) chs_state = chs_state + 1;
         }
         if(addr==0x38) adlib_register = data;
