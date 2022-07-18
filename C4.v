@@ -60,25 +60,23 @@ reg  [1:0] IORr;
 reg  [1:0] ACKr;
 reg  [1:0] GPIO_ICLr;
 
-wire IOW_falling = (IOWr==2'b10);
 wire IOW_rising = (IOWr==2'b01);
 wire IOR_falling = (IORr==2'b10);
 wire IOR_rising = (IORr==2'b01);
-wire ACK_falling = (ACKr==2'b10);
 wire ACK_rising = (ACKr==2'b01);
 wire GPIO_ICL_rising = (GPIO_ICLr==2'b01);
-wire GPIO_ICL_falling = (GPIO_ICLr==2'b10);
 
 reg  [7:0] adlib_detect;
 reg  [7:0] adlib_reg;
 
-reg  [5:0] audio_fifo[511:0];
+reg  [5:0] audio_fifo[255:0];
 reg  [7:0] wr_audio;
 reg  [7:0] rd_audio;
 
 reg  [7:0] out_fifo[255:0];
 reg  [7:0] wr_fifo;
 reg  [7:0] rd_fifo;
+reg        rd;
 
 reg  [3:0] in_fifo[1023:0];
 reg  [9:0] in_wr_fifo;
@@ -106,6 +104,8 @@ begin
 			wr_fifo <= wr_fifo + 2;
 			in_rd_fifo <= 0;
 			in_wr_fifo <= 0;
+			if(D==1) rd <= 1;
+			else rd <= 0;
 		end
 		10'h171: // [hdd] write: chs+data, read: data
 		begin
@@ -135,7 +135,11 @@ begin
 	// IO read
 	if(IOR_falling)
 	case(A)
-		10'h170: D <= (in_wr_fifo==1023 ? 255 : in_wr_fifo>>3);
+		10'h170:
+		begin
+			if(rd==0) D <= (wr_fifo==rd_fifo ? 0 : 255);
+		   if(rd==1) D <= (in_wr_fifo==1023 ? 255 : in_wr_fifo>>3);
+		end
 		10'h171:
 		begin
 			D <= {in_fifo[in_rd_fifo+1], in_fifo[in_rd_fifo]};

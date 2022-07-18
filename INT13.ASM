@@ -68,6 +68,8 @@ read:
 	iret
 
 INT13_write:
+	xor	ah, ah
+	iret
 	push    ax
 	push	bx
 	push	cx
@@ -96,14 +98,27 @@ INT13_write:
 	mov     al, cl       ; sector
 	out     dx, al
 
+	xor	bh, bh
+	shl	bx, 2
+
+	dec	dx
 write_next:
-	mov	cx, 512
+	in	al, dx
+	cmp	al, 0
+	jnz	write_next
+	mov	cx, 128
+	inc	dx
 write:
 	lodsb
 	out	dx, al	
 	loop    write
-	dec     bl
+	dec	dx
+	dec     bx
 	jnz     write_next
+finally:
+	in	al, dx
+	cmp	al, 0
+	jnz	finally
 	pop	si
 	pop	ds
 	pop	dx
@@ -120,4 +135,4 @@ INT13_type:
 
 times 32767-($-$$) db 0
 ;	db	0
-	db	-142
+	db	-125
