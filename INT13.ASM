@@ -45,7 +45,7 @@ INT13_read:
 	out     dx, al
 read_next:
 	dec     dx
-	mov     al, 1        ; read next
+	mov     al, 1
 	out     dx, al
 wait_read:
 	in      al, dx
@@ -68,6 +68,49 @@ read:
 	iret
 
 INT13_write:
+	push    ax
+	push	bx
+	push	cx
+	push	dx
+	push	ds
+	push	si
+	mov     si, bx       ; source given as ES:BX, lodsb takes DS:SI
+	mov	bx, es
+	mov	ds, bx
+
+	mov     bh, dh       ; head: DH -> BH
+	mov     bl, al       ; number of sectors to read -> BL
+
+	mov     al, 0        ; reset interface
+	mov     dx, 0x170
+	out     dx, al
+
+	inc     dx
+
+	mov     al, ch       ; cylinder
+	out     dx, al
+	
+	mov     al, bh       ; head
+	out     dx, al
+	
+	mov     al, cl       ; sector
+	out     dx, al
+
+write_next:
+	mov	cx, 512
+write:
+	lodsb
+	out	dx, al	
+	loop    write
+	dec     bl
+	jnz     write_next
+	pop	si
+	pop	ds
+	pop	dx
+	pop	cx
+	pop	bx
+	pop     ax           ; return in al: number of sectors written
+	xor     ah, ah       ; return in ah: no error
 	iret
 
 INT13_type:
@@ -77,4 +120,4 @@ INT13_type:
 
 times 32767-($-$$) db 0
 ;	db	0
-	db	-70
+	db	-142
