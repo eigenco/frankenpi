@@ -41,29 +41,22 @@ module DE0_CV_Default(
 );
 
 /*** BEGIN Delta-Sigma-Modulator */
-/*
-reg signed [15:0] left;
-reg signed [15:0] right;
-reg signed [18:0] inta;
-reg signed [18:0] outa;
+
+reg signed [26:0] inta;
+reg signed [26:0] outa;
 
 always @(posedge CLOCK_50)
 begin
-	inta = inta + left - outa;
+	inta = inta + left - outa;  // for testing a crude analog output
 	if(inta>0)
-	begin
-		GPIO_1[0] = 1;
-		GPIO_1[1] = 1;
-		outa = 32767;
-	end
+		outa = 8388607;
 	else
-	begin
-		GPIO_1[0] = 0;
-		GPIO_1[1] = 0;
-		outa = -32767;
-	end
+		outa = -8388607;
 end
-*/
+
+assign GPIO_1[0] = (inta>0 ? 1 : 0);
+assign GPIO_1[1] = (inta>0 ? 1 : 0);
+
 /*** EOF Delta-Sigma-Modulator */
 
 /*** BEGIN AudioFIFO ***/
