@@ -127,7 +127,7 @@ spdif_core spdif_core(
 PLL pll(
 	.refclk(CLOCK_50),
 	.rst(0),
-	.outclk_0(spdif_clk), // bg
+	.outclk_0(spdif_clk), // 48000*32*2*2
 	.locked());
 	
 /*** EOF SPDIF ***/
