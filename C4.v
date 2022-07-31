@@ -27,7 +27,8 @@ module C4(
 	input       [3:0] GPIO_DI,    // GPIO[22:19] FPGA <-- Raspberry Pi data
 	input             GPIO_ICL,   // GPIO[24]    FPGA <-- Raspberry Pi clock
 	
-	output            SPDIF
+	output            SPDIF,
+	output            MIDI
 );
 
 /*
@@ -53,18 +54,41 @@ module C4(
                     | GND            VCC
 */
 
-reg [24:0] cnt;
+/*** BEGIN Delta-Sigma-Modulator */
+
+reg signed [23:0] left;
+reg signed [23:0] right;
+/*
+reg signed [26:0] inta;
+reg signed [26:0] outa;
+
+always @(posedge clk)
+begin
+	inta = inta + left - outa;  // for testing a crude analog output
+	if(inta>0)
+		outa = 8388607;
+	else
+		outa = -8388607;
+end
+
+assign SPDIF = (inta>0 ? 1 : 0);
+assign MIDI  = (inta>0 ? 1 : 0);
+*/
+/*** EOF Delta-Sigma-Modulator */
+
+reg [31:0] cnt;
 
 reg  [1:0] IOWr;
 reg  [1:0] IORr;
 reg  [1:0] ACKr;
 reg  [1:0] GPIO_ICLr;
 
-wire IOW_rising = (IOWr==2'b01);
+/*
 wire IOR_falling = (IORr==2'b10);
 wire IOR_rising = (IORr==2'b01);
 wire ACK_rising = (ACKr==2'b01);
 wire GPIO_ICL_rising = (GPIO_ICLr==2'b01);
+*/
 
 reg  [7:0] adlib_detect;
 reg  [7:0] adlib_reg;
@@ -82,11 +106,18 @@ reg  [3:0] in_fifo[1023:0];
 reg  [9:0] in_wr_fifo;
 reg  [9:0] in_rd_fifo;
 
+reg  [7:0] C;
+reg  [7:0] DMAsta;
+reg [16:0] DMAlen;
+reg [31:0] DMAcnt;
+
+initial
+begin
+	leds = 0;
+end
+
 always @(posedge clk)
 begin
-	//if(cnt>32000000) IRQ[7] <= 1;
-	//else IRQ[7] <= 0;
-	
 	cnt <= cnt + 1;
 	
 	IOWr <= {IOWr[0], IOW};
@@ -94,46 +125,91 @@ begin
 	ACKr <= {ACKr[0], ACK};
 	GPIO_ICLr <= {GPIO_ICLr[0], GPIO_ICL};
 	
+	/* BEGIN DMA */
+	
+	if(DMAlen>0)
+	begin		
+		if(DMAcnt>6250 && DACK1==1)
+		begin
+			DMAcnt <= 0;
+			DRQ1 <= 1;
+		end
+		else
+			DMAcnt <= DMAcnt + 1;
+	end
+	
+	if(DACK1==0)
+	begin
+		DRQ1 <= 0;
+		leds <= 255;
+		if(IOWr==2'b01)
+		begin
+			left[23:16] <= D-128;
+			right[23:16] <= D-128;
+			DMAlen <= DMAlen - 1;
+		end
+	end
+	
+	/* END DMA */
+	
 	// IO write
-	if(IOW_rising)
-	case(A)
-		10'h170: // [hdd] write: reset/read, read: status
-		begin
-			out_fifo[wr_fifo+0] <= 8'h70;
-			out_fifo[wr_fifo+1] <= D;
-			wr_fifo <= wr_fifo + 2;
-			in_rd_fifo <= 0;
-			in_wr_fifo <= 0;
-			if(D==1) rd <= 1;
-			else rd <= 0;
-		end
-		10'h171: // [hdd] write: chs+data, read: data
-		begin
-			out_fifo[wr_fifo+0] <= 8'h71;
-			out_fifo[wr_fifo+1] <= D;
-			wr_fifo <= wr_fifo + 2;
-		end
-		
-		10'h388: // adlib register
-		begin
-			out_fifo[wr_fifo+0] <= 8'h38;
-			out_fifo[wr_fifo+1] <= D;
-			wr_fifo <= wr_fifo + 2;
-			adlib_detect <= 0;
-			adlib_reg <= D;			
-		end
-		10'h389: // adlib data
-		begin
-			out_fifo[wr_fifo+0] <= 8'h39;
-			out_fifo[wr_fifo+1] <= D;
-			wr_fifo <= wr_fifo + 2;
-			if(adlib_reg==8'h60 && D==8'h04) adlib_detect <= 8'h00;
-			if(adlib_reg==8'h04 && D==8'h21) adlib_detect <= 8'hC0;
-		end
-	endcase
+	if(IOWr==2'b01)
+	begin
+		case(A)
+			10'h170: // [hdd] write: reset/read, read: status
+			begin
+				out_fifo[wr_fifo+0] <= 8'h70;
+				out_fifo[wr_fifo+1] <= D;
+				wr_fifo <= wr_fifo + 2;
+				in_rd_fifo <= 0;
+				in_wr_fifo <= 0;
+				if(D==1) rd <= 1;
+				else rd <= 0;
+			end
+			10'h171: // [hdd] write: chs+data, read: data
+			begin
+				out_fifo[wr_fifo+0] <= 8'h71;
+				out_fifo[wr_fifo+1] <= D;
+				wr_fifo <= wr_fifo + 2;
+			end
+
+			10'h22c: // SB
+			begin
+				if(D==8'h14)
+					DMAsta <= 1;
+				if(DMAsta==1)
+				begin
+					C <= D;
+					DMAsta <= 2;
+				end
+				if(DMAsta==2)
+				begin
+					DMAlen <= {D, C} + 1;
+					DMAsta <= 0;
+				end
+			end
+
+			10'h388: // adlib register
+			begin
+				out_fifo[wr_fifo+0] <= 8'h38;
+				out_fifo[wr_fifo+1] <= D;
+				wr_fifo <= wr_fifo + 2;
+				adlib_detect <= 0;
+				adlib_reg <= D;
+			end
+			10'h389: // adlib data
+			begin
+				out_fifo[wr_fifo+0] <= 8'h39;
+				out_fifo[wr_fifo+1] <= D;
+				wr_fifo <= wr_fifo + 2;
+				if(adlib_reg==8'h60 && D==8'h04) adlib_detect <= 8'h00;
+				if(adlib_reg==8'h04 && D==8'h21) adlib_detect <= 8'hC0;
+			end
+		endcase
+	end
 
 	// IO read
-	if(IOR_falling)
+	if(IORr==2'b10)
 	case(A)
 		10'h170:
 		begin
@@ -152,7 +228,7 @@ begin
 		default: D <= 8'hZ;
 	endcase
 
-	if(IOR_rising)
+	if(IORr==2'b01)
 		D <= 8'hZ;
 
 	// IO output fifo
@@ -162,30 +238,32 @@ begin
 		if(rd_fifo[0]==0) REQ[1] <= 0;
 		if(rd_fifo[0]==1) REQ[1] <= 1;
 		GPIO_AD <= out_fifo[rd_fifo];
-		if(ACK_rising)
+		if(ACKr==2'b01)
 			rd_fifo <= rd_fifo + 1;
 	end else
 		REQ <= 0;
 		
 	// IO input fifo
-	if(GPIO_ICL_rising)
+	if(GPIO_ICLr==2'b01)
 	begin
 		in_fifo[in_wr_fifo] <= GPIO_DI;
 		if(in_wr_fifo<1023) in_wr_fifo <= in_wr_fifo + 1;
 	end
 end
 
+/*** SPDIF ***/
+
 spdif_core spdif_core(
     .clk_i(spdif_clk),
     .rst_i(0),
 	 .bit_out_en_i(1),
 	 .spdif_o(SPDIF),
-	 .sample_i({20'd0, 20'd0})
+	 .sample_i({right, left})
 );
 
-spdif_pll spdif_pll(
+PLL PLL(
 	.inclk0(clk),
-	.c0(spdif_clk)
-	);
+	.c0(spdif_clk));
+
 
 endmodule
