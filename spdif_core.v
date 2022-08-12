@@ -36,7 +36,9 @@ module spdif_core
     // For 96 kHz,   96000x32x2x2 = 12,288,000 Hz
     input           bit_out_en_i,
     output          spdif_o,
-    input [47:0]    sample_i,
+    //input [47:0]    sample_i,
+	 input [23:0]    sample_r,
+	 input [23:0]    sample_l,
     output reg      sample_req_o
 );
 
@@ -83,8 +85,10 @@ begin
    begin
 		if(subframe_count_q[0] == 1'b0)
 		begin
-			audio_sample_q <= sample_i[23:0];
-			sample_buf_q <= sample_i[47:24];
+			audio_sample_q <= sample_l;
+			sample_buf_q <= sample_r;
+			//audio_sample_q <= sample_i[23:0];
+			//sample_buf_q <= sample_i[47:24];
 			sample_req_o <= 1'b1;
 		end
 		else
