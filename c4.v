@@ -161,14 +161,9 @@ begin
 			DMAcnt <= DMAcnt + 1;		
 	end
 
-	if(DMAlen==1) IRQcnt <= 10;
-	else
-	if(IRQcnt>0)
-	begin
-		IRQcnt <= IRQcnt - 1;
-		IRQ7 <= 1;
-	end else
-		IRQ7 <= 0;
+	if(IRQcnt>0) IRQcnt <= IRQcnt - 1;
+	if(IRQcnt==9) IRQ7 <= 1;
+	if(IRQcnt==0) IRQ7 <= 0;
 	
 	if(DACK1==0)
 	begin
@@ -178,13 +173,14 @@ begin
 			DRQ1 <= 0;
 			pcm <= D;
 			DMAlen <= DMAlen - 1;
+			if(DMAlen==1) IRQcnt <= 9;
 		end
 	end
 	
 	/* END DMA */
 	
 	// IO write
-	if(IOWr==2'b10 && DACK1==1)
+	if(IOWr==2'b10 && AEN==0)
 	begin
 		case(A)
 			10'h170:
@@ -198,23 +194,7 @@ begin
 			begin
 				o_wr_address <= o_wr_address + 1;
 				o_data <= {1'b1, A[7:0]};				
-			end
-			
-			10'h22c: // SB
-			begin
-				if(D==8'h14)
-					DMAsta <= 1;
-				if(DMAsta==1)
-				begin
-					C <= D;
-					DMAsta <= 2;
-				end
-				if(DMAsta==2)
-				begin
-					DMAlen <= {D, C} + 1;
-					DMAsta <= 0;
-				end
-			end
+			end		
 			
 			10'h388:
 			begin
@@ -228,7 +208,7 @@ begin
 			end
 		endcase
 	end
-	if(IOWr==2'b01 && DACK1==1)
+	if(IOWr==2'b01 && AEN==0)
 	begin
 		case(A)
 			10'h170:
@@ -245,6 +225,29 @@ begin
 				o_wr_address <= o_wr_address + 1;
 				o_data <= {1'b0, D};
 			end
+
+			10'h22c: // SB
+			begin
+				if(D==8'hd0)
+				begin
+					DMAlen <= 0;
+					IRQcnt <= 0;
+					IRQ7 <= 0;
+				end
+				if(D==8'h14)
+					DMAsta <= 1;
+				if(DMAsta==1)
+				begin
+					C <= D;
+					DMAsta <= 2;
+				end
+				if(DMAsta==2)
+				begin
+					DMAlen <= {D, C} + 1;
+					DMAsta <= 0;
+				end
+			end
+
 			10'h388: // adlib register
 			begin
 				o_wr_address <= o_wr_address + 1;
@@ -263,7 +266,7 @@ begin
 	end
 
 	// IO read
-	if(IORr==2'b10)
+	if(IORr==2'b10 && AEN==0)
 	begin
 		case(A)
 			10'h170:
@@ -278,7 +281,7 @@ begin
 			10'h388: D <= adlib_detect;
 		endcase
 	end
-	if(IORr==2'b01)
+	if(IORr==2'b01 && AEN==0)
 	begin
 		D <= 8'hZ;
 		case(A)
