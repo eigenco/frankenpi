@@ -2,7 +2,7 @@
 
 This is an experimental project to connect Raspberry Pi with the help of cheap Cyclone IV board to 8-bit ISA bus to act as multiple different devices.
 
-Hdd works fully, including writing, adlib and pcm through SPDIF works now (wolf3d works fully). DMA and IRQ implemented. Some detection issues remain.
+Hdd works fully, including writing, adlib and pcm through SPDIF works now (wolf3d works). DMA and IRQ implemented, but setting playback frequency not implemented, everything runs at a constant rate (roughly what wolf3d is expecting). Some detection issues remain.
 
 Remember to set video BIOS shadow on in BIOS to gain a lot in hdd speed.
 
