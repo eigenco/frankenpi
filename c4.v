@@ -233,6 +233,12 @@ begin
 			10'h22c: // SB
 			begin
 				DSPreg <= D;
+				if(D==8'hd0)
+				begin
+					DMAlen <= 0;
+					IRQ7 <= 0;
+					IRQcnt <= 0;
+				end
 				//if(D==8'hd0) SBpause <= 1;
 				//if(D==8'hd4) SBpause <= 0;
 				if(D==8'h40) TAUsta <= 1;
