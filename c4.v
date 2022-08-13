@@ -115,10 +115,14 @@ reg   [7:0] adlib_reg;
 
 reg  [7:0] IRQcnt;
 reg  [7:0] C;
-reg  [7:0] DMAsta;
+reg  [3:0] TAUsta;
+reg  [3:0] DMAsta;
 reg [16:0] DMAlen;
 reg [31:0] DMAcnt;
-reg [7:0] pcm;
+reg  [7:0] pcm;
+reg        SBpause;
+reg  [7:0] DSPreg;
+reg [15:0] fsv;
 
 initial
 begin
@@ -152,7 +156,7 @@ begin
 	
 	if(DMAlen>0 && DRQ1==0)
 	begin
-		if(DMAcnt>7000 && DACK1==1)
+		if(DMAcnt>fsv && DACK1==1)
 		begin
 			DMAcnt <= 0;
 			DRQ1 <= 1;
@@ -228,14 +232,16 @@ begin
 
 			10'h22c: // SB
 			begin
-				if(D==8'hd0)
+				DSPreg <= D;
+				//if(D==8'hd0) SBpause <= 1;
+				//if(D==8'hd4) SBpause <= 0;
+				if(D==8'h40) TAUsta <= 1;
+				if(TAUsta==1)
 				begin
-					DMAlen <= 0;
-					IRQcnt <= 0;
-					IRQ7 <= 0;
+					fsv <= 50*(256-D);
+					TAUsta <= 0;
 				end
-				if(D==8'h14)
-					DMAsta <= 1;
+				if(D==8'h14) DMAsta <= 1;
 				if(DMAsta==1)
 				begin
 					C <= D;
@@ -275,7 +281,11 @@ begin
 				if(wr) D <= (o_wr_address==o_rd_address);
 			end
 			10'h171:	D <= i_data;
-			10'h22a: D <= 8'haa; // SB detect
+			10'h22a:
+			begin
+				if(DSPreg==8'he1) D <= 1;
+				else D <= 8'haa; // SB detect
+			end
 			10'h22c: D <= 0;     // SB detect
 			10'h22e: D <= 8'hff; // SB detect
 			10'h388: D <= adlib_detect;
