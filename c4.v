@@ -161,7 +161,8 @@ begin
 			DMAcnt <= DMAcnt + 1;		
 	end
 
-	if(DMAlen==1) IRQcnt <= 25;
+	if(DMAlen==1) IRQcnt <= 10;
+	else
 	if(IRQcnt>0)
 	begin
 		IRQcnt <= IRQcnt - 1;
