@@ -1,7 +1,7 @@
 # frankenpi
 
 What currently works (to some degree), i.e. PC can access through ISA
-- Mass storage from a file on the Raspberry Pi, woth reading (from file) and writing (to memory)
+- Mass storage from a file on the Raspberry Pi, both reading (from file) and writing (to memory)
 - Adlib data and reverse audio data back from Raspberry Pi to optical SPDIF (adlib works pretty much perfectly)
 - Sound Blaster 8-bit mono with DMA and IRQ, simultaneously to optical SPDIF (with limitations)
 - Gravis Ultrasound forward fed wavetable functions and simultaneous feed back to optical SPDIF (rather limited compatibility, read below, no DMA/IRQ)
