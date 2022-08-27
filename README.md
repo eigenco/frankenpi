@@ -1,8 +1,18 @@
 # frankenpi
 
+What currently works (to some degree), i.e. PC can access through ISA
+- Mass storage from a file on the Raspberry Pi, woth reading (from file) and writing (to memory)
+- Adlib data and reverse audio data back from Raspberry Pi to optical SPDIF (adlib works pretty much perfectly)
+- Sound Blaster 8-bit mono with DMA and IRQ, simultaneously to optical SPDIF (with limitations)
+- Gravis Ultrasound forward fed wavetable functions and simultaneous feed back to optical SPDIF (rather limited compatibility, read below, no DMA/IRQ)
+
 This is an experimental project to connect Raspberry Pi with the help of cheap Cyclone IV board to 8-bit ISA bus to act as multiple different devices.
 
 Hdd works, including writing, adlib and pcm through SPDIF works. DMA and IRQ works. Some detection issues remain.
+
+Cleaned up the verilogs (c4.v) a bit and the server code running on Raspberry Pi (pc.c) as well.
+
+Forward feed of data to GUS works and audio data backwards to SPDIF, but GUS as it stands now isn't really detected by anything and there is no backwards flow of data which prevents some many things from working correctly. The 669 player with source here can demo. Sound quality is quite beautiful compared to SB with all the interpolation.
 
 Remember to set video BIOS shadow on in BIOS to gain a lot in hdd speed.
 
@@ -21,3 +31,7 @@ TESTED and working:
 - Space Quest 3
 - Lotus 3
 - Lemmings
+
+Planned
+- Sound Blaster AWE32 wavetable support
+- Mouse support through Raspberry Pi USB
