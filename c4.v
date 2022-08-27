@@ -1,7 +1,7 @@
 /*
   IDE:          170h --> 70h
   IDE:          171h --> 71h
-  SoundBlaster: 22ch --> 2ch 
+  SoundBlaster: 22ch --> 2ch
   MIDI:         330h --> 30h
   GUS:   342h - 347h --> 42h - 47h
   OPL3:         388h --> 88h
@@ -14,55 +14,49 @@ module C4(
 	input             clk,
 	output reg  [7:0] leds,
 	
-	input       [9:0] A,          // ISA address
-	inout  reg  [7:0] D,          // ISA data
-	input             IOR,        // ISA IOR
-	input             IOW,        // ISA IOW
-	input             MEMR,       // ISA MEMR
-	input             MEMW,       // ISA MEMW
+	input       [9:0] A,           // ISA address
+	inout  reg  [7:0] D,           // ISA data
+	input             IOR,         // ISA IOR
+	input             IOW,         // ISA IOW
+	input             MEMR,        // ISA MEMR
+	input             MEMW,        // ISA MEMW
 	input             IRQ2,
 	input             IRQ3,
 	input             IRQ4,
 	input             IRQ5,
 	input             IRQ6,
-	inout reg         IRQ7,       // ISA IRQ7
-	inout reg         DRQ1,       // ISA DRQ1 (output reg)
-	input             DACK1,      // ISA DACK1
-	input             AEN,        // ISA AEN
+	inout reg         IRQ7,        // ISA IRQ7
+	inout reg         DRQ1,        // ISA DRQ1 (output reg)
+	input             DACK1,       // ISA DACK1
+	input             AEN,         // ISA AEN
 
 	// F --> R data output
-	output            GPIO0,      // DO0
-	output            GPIO1,      // DO1
-	output            GPIO2,      // DO2
-	output            GPIO3,      // DO3
-	output            GPIO4,      // DO4
-	output            GPIO5,      // DO5
-	output            GPIO6,      // DO6
-	output            GPIO7,      // DO7
+	output            GPIO0,       // DO0
+	output            GPIO1,       // DO1
+	output            GPIO2,       // DO2
+	output            GPIO3,       // DO3
+	output            GPIO4,       // DO4
+	output            GPIO5,       // DO5
+	output            GPIO6,       // DO6
+	output            GPIO7,       // DO7
+	output            GPIO8,       // DO8 (address/data)
 
-   // F <-- R data input
-	input             GPIO8,      // DI0
-	input             GPIO9,      // DI1
-	input             GPIO10,     // DI2
-	input             GPIO11,     // DI3
-	input             GPIO12,     // DI4
-	input             GPIO13,     // DI5
-	input             GPIO14,     // DI6
-	input             GPIO15,     // DI7
+	// F <-- R data input
+	input             GPIO9,       // DI0
+	input             GPIO10,      // DI1
+	input             GPIO11,      // DI2
+	input             GPIO12,      // DI3
+	input             GPIO13,      // DI4
+	input             GPIO14,      // DI5
+	input             GPIO15,      // DI6
+	input             GPIO16,      // DI7
 
-	output            GPIO16,     // F --> R address/data indicator
-	output reg        GPIO17,     // F --> R output FIFO has data
-	input             GPIO18,     // F <-- R output FIFO read clock
-	input             GPIO19,     // F <-- R output FIFO address increment
-	input             GPIO20,     // F <-- R input FIFO write clock
-	input             GPIO21,     // F <-- R input FIFO wren
-	input             GPIO22,     // F <-- R audio FIFO write clock
-	output reg        GPIO23,     // F --> R audio request
-   output reg        GPIO24,     // F <-- R audio FIFO wren
-   input             GPIO25,
-   input             GPIO26,
-   input             GPIO27,
-   input             GPIO28,
+	output reg        FPGA_TX_REQ, // F --> R
+	output reg        FPGA_RX_REQ, // F --> R
+	input             CLOCK,       // F <-- R
+	input             STATE0,      // F <-- R
+	input             STATE1,      // F <-- R
+	input             STATE2,      // F <-- R
 
 	output            SPDIF,
 	output            MIDI
@@ -72,13 +66,13 @@ module C4(
  PINOUT
 
  A0    7 10 GPIO21  | GND    GND GND GND
- A1   11 28 GPIO19  | (GP26)  NC 137 GPIO20
+ A1   11 28 GPIO19  |         NC 137 GPIO20
  A2   30 31 GPIO18  | GPIO13 136 135 GPIO16
  A3   32 33 DRQ1    | GPIO12 133 132 GPIO06
  A4   34 38 DACK1   | GPIO00 129 128 GPIO05
  A5   39 42 CLK     | GPIO07 127 126 GPIO01
  A6   46 49 A9      | GPIO08 125 124 GPIO11
- A7   50 51 A8      | (GP25) 121 120 GPIO09
+ A7   50 51 A8      |        121 120 GPIO09
  ------------------------------------------
  IRQ3 52 53 D7      | GPIO24 119 115 GPIO10
  IRQ4 54 55 D6      | GPIO23 114 111 GPIO22
@@ -87,24 +81,22 @@ module C4(
  IRQ7 65 66 D3      | GPIO2  100  85 GPIO03
  IRQ2 67 68 D2      | SPDIF   84  83 (MIDI)
       69 70 D1      | IOR     80  77 IOW
- (AEN)71 72 D0      | MEMR    76  75 MEMW
+  AEN 71 72 D0      | MEMR    76  75 MEMW
                     | GND            VCC
 */
 
-reg [31:0] cnt;
-
-reg        rd;
-reg        wr;
+reg  [31:0] cnt;
+reg   [2:0] past_state;
+reg         rd;
+reg         wr;
 
 reg   [1:0] IOWr;
 reg   [1:0] IORr;
-reg   [1:0] GPIO18r;
-reg   [1:0] GPIO19r;
-reg   [1:0] GPIO20r;
+reg   [1:0] CLOCKr;
 
 reg   [8:0] o_data;
-reg  [10:0] o_wr_address;
-reg  [10:0] o_rd_address;
+reg  [12:0] o_wr_address;
+reg  [12:0] o_rd_address;
 
 wire  [7:0] i_data;
 reg   [9:0] i_rd_address;
@@ -113,16 +105,20 @@ reg   [9:0] i_wr_address;
 reg   [7:0] adlib_detect;
 reg   [7:0] adlib_reg;
 
-reg  [7:0] IRQcnt;
-reg  [7:0] C;
-reg  [3:0] TAUsta;
-reg  [3:0] DMAsta;
-reg [16:0] DMAlen;
-reg [31:0] DMAcnt;
-reg  [7:0] pcm;
-reg        SBpause;
-reg  [7:0] DSPreg;
-reg [15:0] fsv;
+reg   [7:0] sb_DSP_reg;
+reg   [7:0] sb_IRQ_count;
+reg   [7:0] sb_C;
+reg   [3:0] sb_TAU_state;
+reg   [3:0] sb_DMA_state;
+reg  [16:0] sb_DMA_length;
+reg  [31:0] sb_DMA_count;
+reg   [7:0] sb_pcm;
+reg  [15:0] sb_DMA_wait;
+
+reg   [7:0] gus_global;
+reg  [19:0] gus_addr;
+reg   [7:0] gus_ram[15:0];
+reg   [7:0] gus_voice;
 
 initial
 begin
@@ -136,57 +132,54 @@ begin
 
 	IOWr <= {IOWr[0], IOW};
 	IORr <= {IORr[0], IOR};
-	GPIO18r <= {GPIO18r[0], GPIO18};
-	GPIO19r <= {GPIO19r[0], GPIO19};
-	GPIO20r <= {GPIO20r[0], GPIO20};
-	
-	if(GPIO18r==2'b01)
-		if(o_rd_address==o_wr_address)
-			GPIO17 <= 0;
-		else
-			GPIO17 <= 1;
-
-	if(GPIO19r==2'b01)
-		o_rd_address <= o_rd_address + 1;
-	
-	if(GPIO20r==2'b01)
-		i_wr_address <= i_wr_address + 1;
+	CLOCKr <= {CLOCKr[0], CLOCK};
 		
-	/* BEGIN DMA */
-	
-	if(DMAlen>0 && DRQ1==0)
+	if(CLOCKr==2'b01)
 	begin
-		if(DMAcnt>fsv && DACK1==1)
+		if({STATE2, STATE1, STATE0} == 0)
 		begin
-			DMAcnt <= 0;
+			if(o_rd_address==o_wr_address) FPGA_TX_REQ <= 0;
+			else FPGA_TX_REQ <= 1;			
+		end
+		if({STATE2, STATE1, STATE0} == 1 && past_state == 0) o_rd_address <= o_rd_address + 1;
+		if({STATE2, STATE1, STATE0} == 4) i_wr_address <= i_wr_address + 1;
+		past_state <= {STATE2, STATE1, STATE0};
+	end
+	
+	// BOF: sound blaster dma routines
+	if(sb_DMA_length>0 && DRQ1==0)
+	begin
+		if(sb_DMA_count>sb_DMA_wait && DACK1==1)
+		begin
+			sb_DMA_count <= 0;
 			DRQ1 <= 1;
 		end
 		else
-			DMAcnt <= DMAcnt + 1;		
+			sb_DMA_count <= sb_DMA_count + 1;		
 	end
 
-	if(IRQcnt>0) IRQcnt <= IRQcnt - 1;
-	if(IRQcnt==9) IRQ7 <= 1;
-	if(IRQcnt==0) IRQ7 <= 0;
+	if(sb_IRQ_count>0) sb_IRQ_count <= sb_IRQ_count - 1;
+	if(sb_IRQ_count==9) IRQ7 <= 1;
+	if(sb_IRQ_count==0) IRQ7 <= 0;
 	
 	if(DACK1==0)
 	begin
-		//DRQ1 <= 1'bZ;		
 		if(IOWr==2'b01)
 		begin
 			DRQ1 <= 0;
-			pcm <= D;
-			DMAlen <= DMAlen - 1;
-			if(DMAlen==1) IRQcnt <= 9;
+			sb_pcm <= D;
+			sb_DMA_length <= sb_DMA_length - 1;
+			if(sb_DMA_length==1) sb_IRQ_count <= 9;
 		end
 	end
-	
-	/* END DMA */
+   // EOF: sound blaster dma routines
 	
 	// IO write
 	if(IOWr==2'b10 && AEN==0)
 	begin
 		case(A)
+		
+			// mass storage
 			10'h170:
 			begin
 				o_wr_address <= o_wr_address + 1;
@@ -198,8 +191,51 @@ begin
 			begin
 				o_wr_address <= o_wr_address + 1;
 				o_data <= {1'b1, A[7:0]};				
-			end		
-			
+			end
+
+			// gravis ultrasound
+			10'h340:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b1, A[7:0]};		
+			end
+			10'h341:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b1, A[7:0]};		
+			end
+			10'h342:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b1, A[7:0]};		
+			end
+			10'h343:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b1, A[7:0]};		
+			end
+			10'h344:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b1, A[7:0]};		
+			end
+			10'h345:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b1, A[7:0]};		
+			end
+			10'h346:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b1, A[7:0]};		
+			end
+			10'h347:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b1, A[7:0]};		
+			end
+
+			// adlib
 			10'h388:
 			begin
 				o_wr_address <= o_wr_address + 1;
@@ -215,6 +251,8 @@ begin
 	if(IOWr==2'b01 && AEN==0)
 	begin
 		case(A)
+		
+			// mass storage
 			10'h170:
 			begin
 				o_wr_address <= o_wr_address + 1;
@@ -230,50 +268,99 @@ begin
 				o_data <= {1'b0, D};
 			end
 
-			10'h22c: // SB
+			// sound blaster
+			10'h22c:
 			begin
-				DSPreg <= D;
+				sb_DSP_reg <= D;
 				if(D==8'hd0)
 				begin
-					DMAlen <= 0;
+					sb_DMA_length <= 0;
+					sb_IRQ_count <= 0;
 					IRQ7 <= 0;
-					IRQcnt <= 0;
 				end
-				//if(D==8'hd0) SBpause <= 1;
-				//if(D==8'hd4) SBpause <= 0;
-				if(D==8'h40) TAUsta <= 1;
-				if(TAUsta==1)
+				if(D==8'h40) sb_TAU_state <= 1;
+				if(sb_TAU_state==1)
 				begin
-					fsv <= 50*(256-D);
-					TAUsta <= 0;
+					sb_DMA_wait <= 50*(256-D);
+					sb_TAU_state <= 0;
 				end
-				if(D==8'h14) DMAsta <= 1;
-				if(DMAsta==1)
+				if(D==8'h14)
+					sb_DMA_state <= 1;
+				if(sb_DMA_state==1)
 				begin
-					C <= D;
-					DMAsta <= 2;
+					sb_C <= D;
+					sb_DMA_state <= 2;
 				end
-				if(DMAsta==2)
+				if(sb_DMA_state==2)
 				begin
-					DMAlen <= {D, C} + 1;
-					DMAsta <= 0;
+					sb_DMA_length <= {D, sb_C} + 1;
+					sb_DMA_state <= 0;
 				end
 			end
 
-			10'h388: // adlib register
+			// gravis ultrasound
+			10'h340:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b0, D};
+			end
+			10'h341:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b0, D};
+			end
+			10'h342:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b0, D};
+				gus_voice <= D & 31;
+			end
+			10'h343:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b0, D};
+				gus_global <= D;
+			end
+			10'h344:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b0, D};
+				if(gus_global == 8'h43) gus_addr <= (gus_addr & 20'hFFF00) | D;
+			end
+			10'h345:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b0, D};
+			end
+			10'h346:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b0, D};
+			end
+			10'h347:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= {1'b0, D};		
+				gus_ram[gus_addr] <= D;
+				gus_addr <= gus_addr & 20'hFFFFF;
+			end
+			
+			// adlib
+			10'h388:
 			begin
 				o_wr_address <= o_wr_address + 1;
 				o_data <= {1'b0, D};
 				adlib_detect <= 0;
 				adlib_reg <= D;
 			end
-			10'h389: // adlib data
+			10'h389:
 			begin
 				o_wr_address <= o_wr_address + 1;
 				o_data <= {1'b0, D};
 				if(adlib_reg==8'h60 && D==8'h04) adlib_detect <= 8'h00;
 				if(adlib_reg==8'h04 && D==8'h21) adlib_detect <= 8'hC0;
 			end
+
 		endcase
 	end
 
@@ -281,20 +368,58 @@ begin
 	if(IORr==2'b10 && AEN==0)
 	begin
 		case(A)
+		
+			// mass storage
 			10'h170:
 			begin
 				if(rd) D <= (i_wr_address==512 ? 255 : {1'b0, i_wr_address[9:3]});
 				if(wr) D <= (o_wr_address==o_rd_address);
 			end
 			10'h171:	D <= i_data;
+			
+			// sound blaster
 			10'h22a:
 			begin
-				if(DSPreg==8'he1) D <= 1;
-				else D <= 8'haa; // SB detect
+				if(sb_DSP_reg==8'he1) D <= 1;
+				else D <= 8'haa;
 			end
-			10'h22c: D <= 0;     // SB detect
-			10'h22e: D <= 8'hff; // SB detect
+			10'h22c: D <= 0;
+			10'h22e: D <= 8'hff;
+			
+			// gravis ultrasound
+			10'h342: D <= gus_voice;
+			10'h343: D <= gus_global;
+			10'h344: D <= 255;
+			10'h345:
+			begin
+				case(gus_global)
+					8'h00: D <= 255;
+					8'h01: D <= 255;
+					8'h02: D <= 255;
+					8'h03: D <= 255;
+					8'h04: D <= 255;
+					8'h05: D <= 255;
+					8'h06: D <= 255;
+					8'h07: D <= 255;
+					8'h08: D <= 255;
+					8'h09: D <= 255;
+					8'h0a: D <= 255;
+					8'h0b: D <= 255;
+					8'h0c: D <= 255;
+					8'h0d: D <= 255;
+					8'h0e: D <= 255;
+					8'h0f: D <= 255;
+					8'h49: D <= 0;
+					default: D <= 255;
+				endcase
+			end
+			10'h346: D <= 8'hFF;
+			10'h347: D <= gus_ram[gus_addr];
+			10'h349: D <= 0;
+			
+			// adlib
 			10'h388: D <= adlib_detect;
+
 		endcase
 	end
 	if(IORr==2'b01 && AEN==0)
@@ -303,116 +428,79 @@ begin
 		case(A)
 			10'h171: i_rd_address <= i_rd_address + 1;
 		endcase
-	end	
+	end
+
 end
 
 /******** ******** ******** ********/
 
-/*
-always @(posedge GPIO18)
-	if(o_rd_address==o_wr_address)
-		GPIO17 <= 0;
-	else
-		GPIO17 <= 1;
-
-always @(posedge GPIO19)
-	o_rd_address <= o_rd_address + 1;
-*/
-
 oRAM oRAM (
 	.data(o_data),
 	.rdaddress(o_rd_address),
-	.rdclock(GPIO18),
+	.rdclock({STATE2, STATE1, STATE0} == 1 ? CLOCK : 0),
 	.wraddress(o_wr_address),
 	.wrclock(clk),
 	.wren(1),
-	.q({GPIO16, GPIO7, GPIO6, GPIO5, GPIO4, GPIO3, GPIO2, GPIO1, GPIO0}));
+	.q({GPIO8, GPIO7, GPIO6, GPIO5, GPIO4, GPIO3, GPIO2, GPIO1, GPIO0}));
 
 /******** ******** ******** ********/
 
 iRAM iRAM(
-	.data({GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9, GPIO8}),
+	.data({GPIO16, GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9}),
 	.rdaddress(i_rd_address),
 	.rdclock(clk),
 	.wraddress(i_wr_address),
-	.wrclock(GPIO20),
+	.wrclock({STATE2, STATE1, STATE0} == 4 ? CLOCK : 0),
 	.wren(1),
 	.q(i_data));
 
 /******** ******** ******** ********/
 
-reg signed [23:0] right;
-reg signed [23:0] left;
-wire signed [23:0] r;
-wire signed [23:0] l;
-reg signed [23:0] a;
-reg signed [23:0] b;
-reg   [3:0] acnt;
-reg         awrclk;
-reg         ardclk;
-wire  [7:0] ardusedw;
-wire sample_req_o;
+reg                audio_wrclk;
+reg          [2:0] audio_byte;
+reg  signed [23:0] audio_a;
+reg  signed [23:0] audio_b;
+wire signed [23:0] audio_right;
+wire signed [23:0] audio_left;
+wire         [7:0] audio_buffer_state;
+wire               sample_req_o;
 
-aFIFO aFIFOR(
-	.data(a/2),
-	.rdclk(ardclk),
+aFIFO audio_FIFO_right(
+	.data(audio_a),
+	.rdclk(sample_req_o),
 	.rdreq(1),
-	.wrclk(GPIO21),
+	.wrclk(audio_wrclk),
 	.wrreq(1),
-	.q(r),
+	.q(audio_right),
 	.rdusedw());
 
-aFIFO aFIFOL(
-	.data(b/2),
-	.rdclk(ardclk),
+aFIFO audio_FIFO_left(
+	.data(audio_b),
+	.rdclk(sample_req_o),
 	.rdreq(1),
-	.wrclk(GPIO21),
+	.wrclk(audio_wrclk),
 	.wrreq(1),
-	.q(l),
-	.rdusedw(ardusedw));
-	
-reg [1:0] GPIO21r;
-reg [1:0] GPIO22r;
-reg [2:0] sample_req_or;
+	.q(audio_left),
+	.rdusedw(audio_buffer_state));
 
 always @(posedge clk)
 begin
-	GPIO21r <= {GPIO21r[0], GPIO21};
-	GPIO22r <= {GPIO22r[0], GPIO22};
-	sample_req_or <= {sample_req_or[1:0], sample_req_o};
-
-	if(sample_req_or==3'b110) ardclk <= 1;
-	if(sample_req_or==3'b100) ardclk <= 0;
-	if(sample_req_or==3'b001)
-	begin
-		right <= r + 16384*$signed(pcm-128);
-		left <= l + 16384*$signed(pcm-128);
+	if(CLOCKr==2'b01 || CLOCKr==2'b10)
+	begin		
+		if({STATE2, STATE1, STATE0} == 3)
+		begin
+			if(audio_byte == 0) audio_a[23:16] <= {GPIO16, GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9};
+			if(audio_byte == 1) audio_a[15: 0] <= {GPIO16, GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9, 8'b0};
+			if(audio_byte == 2) audio_b[23:16] <= {GPIO16, GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9};
+			if(audio_byte == 3) audio_b[15: 0] <= {GPIO16, GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9, 8'b0};
+			if(audio_byte == 4) audio_wrclk <= 1;
+			if(audio_byte == 5) audio_wrclk <= 0;
+			audio_byte <= audio_byte + 1;
+		end else
+			audio_byte <= 0;
 	end
-			
-	if(GPIO22r==2'b01 && acnt==0)
-	begin
-		a[23:16] <= {GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9, GPIO8};
-		acnt <= acnt + 1;
-	end
-	if(GPIO22r==2'b10 && acnt==1)
-	begin
-		a[15:0] <= {GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9, GPIO8, 8'b0};
-		acnt <= acnt + 1;
-	end
-	if(GPIO22r==2'b01 && acnt==2)
-	begin
-		b[23:16] <= {GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9, GPIO8};
-		acnt <= acnt + 1;
-	end
-	if(GPIO22r==2'b10 && acnt==3)
-	begin
-		b[15:0] <= {GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9, GPIO8, 8'b0};
-		acnt <= acnt + 1;
-	end
-	if(GPIO21r==2'b01) acnt <= 0;
-
-	GPIO24 <= (ardusedw<63);
-	leds[7:0] <= ardusedw[7:0];
+	FPGA_RX_REQ <= (audio_buffer_state<64);
+	leds <= audio_buffer_state;
 end
 
 spdif_core spdif_core(
@@ -420,8 +508,8 @@ spdif_core spdif_core(
     .rst_i(0),
 	 .bit_out_en_i(1),
 	 .spdif_o(SPDIF),
-	 .sample_r(right),
-	 .sample_l(left),
+	 .sample_r(audio_right + 32768*$signed(sb_pcm-128)),
+	 .sample_l(audio_left + 32768*$signed(sb_pcm-128)),
 	 .sample_req_o(sample_req_o)
 );
 
