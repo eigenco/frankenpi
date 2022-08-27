@@ -23,15 +23,17 @@ Hard disk access is currently handled such that the image file is loaded to the 
 Youtube link here: https://www.youtube.com/watch?v=1ej76w8sHxY
 
 TESTED and working:
-- Wolfenstein 3D
-- Scream Tracker 3.21 (SB1)
-- Skyroads
-- Keen 4
-- Monkey Island
-- Space Quest 3
-- Lotus 3
-- Lemmings
+- Wolfenstein 3D (SB & Adlib)
+- Scream Tracker 3.21 (SB1 only)
+- Skyroads (SB & Adlib)
+- Keen 4 (Adlib)
+- Monkey Island (Adlib)
+- Space Quest 3 (Adlib)
+- Lotus 3 (Adlib)
+- Lemmings (Adlib)
+- 669 player (GUS)
 
 Planned
+- General MIDI and MT-32 support
 - Sound Blaster AWE32 wavetable support
 - Mouse support through Raspberry Pi USB
