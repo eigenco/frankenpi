@@ -34,6 +34,7 @@ TESTED and working:
 - 669 player (GUS)
 
 Planned
-- General MIDI and MT-32 support
+- General MIDI
+- Roland MT-32 support
 - Sound Blaster AWE32 wavetable support
 - Mouse support through Raspberry Pi USB
