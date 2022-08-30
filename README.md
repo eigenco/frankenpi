@@ -12,7 +12,7 @@ Hdd works, including writing, adlib and pcm through SPDIF works. DMA and IRQ wor
 
 Cleaned up the verilogs (c4.v) a bit and the server code running on Raspberry Pi (pc.c) as well.
 
-Forward feed of data to GUS works and audio data backwards to SPDIF, but GUS as it stands now isn't really detected by anything and there is no backwards flow of data which prevents some many things from working correctly. The 669 player with source here can demo. Sound quality is quite beautiful compared to SB with all the interpolation.
+Forward feed of data to GUS works and audio data backwards to SPDIF, but GUS as it stands now isn't really detected by much anything except Scream Tracker 3.21. There is no backwards flow of data which prevents many things from working. Also, it seems Raspberry Pi GPIO is too slow to accept 0WS data and part of the samples fail to transfer in Scream Tracker 3.21 after FPGA buffer gets full. ST3 plays, but sounds jerky obviously as not all samples transferred correctly. The 669 player with source here works ok. Sound quality is quite beautiful compared to SB. Unfortunately it seems I will have to implement wait state for GUS to work properly with existing software (for custom software one could just check that FPGA buffer is not full before writing, but better make stuff compatible).
 
 Remember to set video BIOS shadow on in BIOS to gain a lot in hdd speed.
 
