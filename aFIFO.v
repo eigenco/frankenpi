@@ -51,11 +51,11 @@ module aFIFO (
 	input	  wrclk;
 	input	  wrreq;
 	output	[23:0]  q;
-	output	[7:0]  rdusedw;
+	output	[9:0]  rdusedw;
 
-	wire [7:0] sub_wire0;
+	wire [9:0] sub_wire0;
 	wire [23:0] sub_wire1;
-	wire [7:0] rdusedw = sub_wire0[7:0];
+	wire [9:0] rdusedw = sub_wire0[9:0];
 	wire [23:0] q = sub_wire1[23:0];
 
 	dcfifo	dcfifo_component (
@@ -74,16 +74,16 @@ module aFIFO (
 				.wrusedw ());
 	defparam
 		dcfifo_component.intended_device_family = "Cyclone IV E",
-		dcfifo_component.lpm_numwords = 256,
+		dcfifo_component.lpm_numwords = 1024,
 		dcfifo_component.lpm_showahead = "OFF",
 		dcfifo_component.lpm_type = "dcfifo",
 		dcfifo_component.lpm_width = 24,
-		dcfifo_component.lpm_widthu = 8,
+		dcfifo_component.lpm_widthu = 10,
 		dcfifo_component.overflow_checking = "ON",
-		dcfifo_component.rdsync_delaypipe = 4,
+		dcfifo_component.rdsync_delaypipe = 6,
 		dcfifo_component.underflow_checking = "ON",
 		dcfifo_component.use_eab = "ON",
-		dcfifo_component.wrsync_delaypipe = 4;
+		dcfifo_component.wrsync_delaypipe = 6;
 
 
 endmodule
@@ -97,7 +97,7 @@ endmodule
 // Retrieval info: PRIVATE: AlmostFullThr NUMERIC "-1"
 // Retrieval info: PRIVATE: CLOCKS_ARE_SYNCHRONIZED NUMERIC "0"
 // Retrieval info: PRIVATE: Clock NUMERIC "4"
-// Retrieval info: PRIVATE: Depth NUMERIC "256"
+// Retrieval info: PRIVATE: Depth NUMERIC "1024"
 // Retrieval info: PRIVATE: Empty NUMERIC "1"
 // Retrieval info: PRIVATE: Full NUMERIC "1"
 // Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Cyclone IV E"
@@ -125,21 +125,21 @@ endmodule
 // Retrieval info: PRIVATE: wsUsedW NUMERIC "0"
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone IV E"
-// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "256"
+// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "1024"
 // Retrieval info: CONSTANT: LPM_SHOWAHEAD STRING "OFF"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "dcfifo"
 // Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "24"
-// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "8"
+// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "10"
 // Retrieval info: CONSTANT: OVERFLOW_CHECKING STRING "ON"
-// Retrieval info: CONSTANT: RDSYNC_DELAYPIPE NUMERIC "4"
+// Retrieval info: CONSTANT: RDSYNC_DELAYPIPE NUMERIC "6"
 // Retrieval info: CONSTANT: UNDERFLOW_CHECKING STRING "ON"
 // Retrieval info: CONSTANT: USE_EAB STRING "ON"
-// Retrieval info: CONSTANT: WRSYNC_DELAYPIPE NUMERIC "4"
+// Retrieval info: CONSTANT: WRSYNC_DELAYPIPE NUMERIC "6"
 // Retrieval info: USED_PORT: data 0 0 24 0 INPUT NODEFVAL "data[23..0]"
 // Retrieval info: USED_PORT: q 0 0 24 0 OUTPUT NODEFVAL "q[23..0]"
 // Retrieval info: USED_PORT: rdclk 0 0 0 0 INPUT NODEFVAL "rdclk"
 // Retrieval info: USED_PORT: rdreq 0 0 0 0 INPUT NODEFVAL "rdreq"
-// Retrieval info: USED_PORT: rdusedw 0 0 8 0 OUTPUT NODEFVAL "rdusedw[7..0]"
+// Retrieval info: USED_PORT: rdusedw 0 0 10 0 OUTPUT NODEFVAL "rdusedw[9..0]"
 // Retrieval info: USED_PORT: wrclk 0 0 0 0 INPUT NODEFVAL "wrclk"
 // Retrieval info: USED_PORT: wrreq 0 0 0 0 INPUT NODEFVAL "wrreq"
 // Retrieval info: CONNECT: @data 0 0 24 0 data 0 0 24 0
@@ -148,7 +148,7 @@ endmodule
 // Retrieval info: CONNECT: @wrclk 0 0 0 0 wrclk 0 0 0 0
 // Retrieval info: CONNECT: @wrreq 0 0 0 0 wrreq 0 0 0 0
 // Retrieval info: CONNECT: q 0 0 24 0 @q 0 0 24 0
-// Retrieval info: CONNECT: rdusedw 0 0 8 0 @rdusedw 0 0 8 0
+// Retrieval info: CONNECT: rdusedw 0 0 10 0 @rdusedw 0 0 10 0
 // Retrieval info: GEN_FILE: TYPE_NORMAL aFIFO.v TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL aFIFO.inc FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL aFIFO.cmp FALSE
