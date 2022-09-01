@@ -95,8 +95,8 @@ reg   [1:0] IORr;
 reg   [1:0] CLOCKr;
 
 reg   [8:0] o_data;
-reg  [12:0] o_wr_address;
-reg  [12:0] o_rd_address;
+reg  [11:0] o_wr_address;
+reg  [11:0] o_rd_address;
 
 wire  [7:0] i_data;
 reg   [9:0] i_rd_address;

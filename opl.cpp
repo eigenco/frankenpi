@@ -90,10 +90,16 @@ Bit32u tremtab_pos;
 Bit32u tremtab_add;
 static Bit32u generator_add;
 
+/*
 extern "C" void adlib_init(Bit32u samplerate);
 extern "C" void adlib_write(Bitu idx, Bit8u val);
 extern "C" void adlib_getsample(Bit16s* sndptr, Bits numsamples);
-
+*/
+/*
+extern void adlib_init(Bit32u samplerate);
+extern void adlib_write(Bitu idx, Bit8u val);
+extern void adlib_getsample(Bit16s* sndptr, Bits numsamples);
+*/
 static fltype recipsamp;	// inverse of sampling rate
 static Bit16s wavtable[WAVEPREC*3];	// wave form table
 
@@ -536,7 +542,7 @@ void disable_operator(op_type* op_pt, Bit32u act_type) {
 	}
 }
 
-void adlib_init(Bit32u samplerate) {
+void adlib_init(uint32_t samplerate) {
 	Bits i, j, oct;
 
 	int_samplerate = samplerate;
@@ -659,7 +665,7 @@ void adlib_init(Bit32u samplerate) {
 
 
 
-void adlib_write(Bitu idx, Bit8u val) {
+void adlib_write(uint16_t idx, uint8_t val) {
 	Bit32u second_set = idx&0x100;
 	adlibreg[idx] = val;
 
@@ -1012,7 +1018,7 @@ static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval) {
 	outbufl[i] += chanval;
 #endif
 
-void adlib_getsample(Bit16s* sndptr, Bits numsamples) {
+void adlib_getsample(int16_t* sndptr, int16_t numsamples) {
 	Bits i, endsamples;
 	op_type* cptr;
 
