@@ -4,15 +4,15 @@ What currently works (to some degree), i.e. PC can access through ISA
 - Mass storage from a file on the Raspberry Pi, both reading (from file) and writing (to memory)
 - Adlib data and reverse audio data back from Raspberry Pi to optical SPDIF (adlib works pretty much perfectly)
 - Sound Blaster 8-bit mono with DMA and IRQ, simultaneously to optical SPDIF (with limitations)
-- Gravis Ultrasound forward fed wavetable functions and simultaneous feed back to optical SPDIF (rather limited compatibility, read below, no DMA/IRQ)
+- Gravis Ultrasound forward fed wavetable functions and simultaneous feed back to optical SPDIF (limited compatibility, read below, no DMA/IRQ)
 
 This is an experimental project to connect Raspberry Pi with the help of cheap Cyclone IV board to 8-bit ISA bus to act as multiple different devices.
 
 Hdd works, including writing, adlib and pcm through SPDIF works. DMA and IRQ works. Some detection issues remain.
 
-Cleaned up the verilogs (c4.v) a bit and the server code running on Raspberry Pi (pc.c) as well.
+Cleaned up the verilogs (c4.v) a bit and the server code running on Raspberry Pi (pc.cpp) as well.
 
-Forward feed of data to GUS works and audio data backwards to SPDIF, but GUS as it stands now isn't really detected by much anything except Scream Tracker 3.21. There is no backwards flow of data which prevents many things from working. Also, it seems Raspberry Pi GPIO is too slow to accept 0WS data and part of the samples fail to transfer in Scream Tracker 3.21 after FPGA buffer gets full. ST3 plays, but sounds jerky obviously as not all samples transferred correctly. The 669 player with source here works ok. Sound quality is quite beautiful compared to SB. Unfortunately it seems I will have to implement wait state for GUS to work properly with existing software (for custom software one could just check that FPGA buffer is not full before writing, but better make stuff compatible).
+Forward feed of data to GUS works and audio data backwards to SPDIF, but GUS as it stands now isn't really detected by much anything except Scream Tracker 3.21. There is no backwards flow of data which prevents many things from working. I implemented the waitstate for GUS memory uploads so scream tracker works perfectly now with GUS (I temporarily used soldered the midi pin to chrdy for this purpose and will make a new board later). The 669 player with source works ok too. Sound quality is quite nice compared to SB.
 
 Remember to set video BIOS shadow on in BIOS to gain a lot in hdd speed.
 
@@ -24,7 +24,7 @@ Youtube link here: https://www.youtube.com/watch?v=1ej76w8sHxY
 
 TESTED and working:
 - Wolfenstein 3D (SB & Adlib)
-- Scream Tracker 3.21 (SB1 only)
+- Scream Tracker 3.21 (SB1 and GUS)
 - Skyroads (SB & Adlib)
 - Keen 4 (Adlib)
 - Monkey Island (Adlib)
