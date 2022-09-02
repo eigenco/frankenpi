@@ -426,7 +426,7 @@ void MakeTables(void) {
 }
 
 void init_gus(void) {
-	AutoAmp = 512;
+	AutoAmp = 256;
         memset(&myGUS,0,sizeof(myGUS));
         memset(GUSRam,0,1024*1024);
         MakeTables();

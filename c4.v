@@ -59,7 +59,7 @@ module C4(
 	input             STATE2,      // F <-- R
 
 	output            SPDIF,
-	output            MIDI
+	inout reg         MIDI
 );
 
 /*
@@ -119,11 +119,13 @@ reg   [7:0] gus_global;
 reg  [19:0] gus_addr;
 reg   [7:0] gus_ram[15:0];
 reg   [7:0] gus_voice;
+reg   [7:0] waitstate;
 
 initial
 begin
 	DRQ1 = 1'bZ;
 	IRQ7 = 1'bZ;
+	MIDI = 1'bZ;
 end
 
 always @(posedge clk)
@@ -133,7 +135,7 @@ begin
 	IOWr <= {IOWr[0], IOW};
 	IORr <= {IORr[0], IOR};
 	CLOCKr <= {CLOCKr[0], CLOCK};
-		
+	
 	if(CLOCKr==2'b01)
 	begin
 		if({STATE2, STATE1, STATE0} == 0)
@@ -172,8 +174,13 @@ begin
 			if(sb_DMA_length==1) sb_IRQ_count <= 9;
 		end
 	end
-   // EOF: sound blaster dma routines
-	
+   // EOF: sound blaster dma routines	
+
+	if(waitstate>0) waitstate <= waitstate - 1;	
+	if(waitstate==0)
+	begin
+	MIDI <= 1'bZ;
+
 	// IO write
 	if(IOWr==2'b10 && AEN==0)
 	begin
@@ -232,7 +239,9 @@ begin
 			10'h347:
 			begin
 				o_wr_address <= o_wr_address + 1;
-				o_data <= {1'b1, A[7:0]};		
+				o_data <= {1'b1, A[7:0]};
+				waitstate <= 255;
+				MIDI <= 0;
 			end
 
 			// adlib
@@ -429,7 +438,8 @@ begin
 			10'h171: i_rd_address <= i_rd_address + 1;
 		endcase
 	end
-
+	
+	end
 end
 
 /******** ******** ******** ********/
