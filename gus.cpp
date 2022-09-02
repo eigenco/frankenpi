@@ -426,7 +426,7 @@ void MakeTables(void) {
 }
 
 void init_gus(void) {
-	AutoAmp = 256;
+	AutoAmp = 128; // using original value of 512 causes clipping, not sure why it works a bit differently from the way it does in dosbox so might want to look into this later
         memset(&myGUS,0,sizeof(myGUS));
         memset(GUSRam,0,1024*1024);
         MakeTables();
