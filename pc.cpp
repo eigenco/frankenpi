@@ -1,7 +1,9 @@
 /*
-g++ -O0 -c opl.cpp;g++ -O0 -c gus.cpp ; g++ -O0 pc.cpp opl.o gus.o -lwiringPi -lm -lpthread
+g++ -O0 -c opl.cpp;g++ -O0 -c gus.cpp ; g++ -O0 pc.cpp opl.o gus.o -lwiringPi -lm -lpthread -o pc
 */
 
+#include <unistd.h>
+#include <fcntl.h>
 #include <sched.h>
 #include <termios.h>
 #include <stdio.h>
@@ -13,9 +15,12 @@ g++ -O0 -c opl.cpp;g++ -O0 -c gus.cpp ; g++ -O0 pc.cpp opl.o gus.o -lwiringPi -l
 void init_gus(void);
 void write_gus(uint16_t addr, uint8_t data);
 void GUS_CallBack(uint16_t len);
+uint32_t rx_read = 0;
+uint32_t rx_write = 0;
 uint8_t audio_busy = 0;
 uint8_t adlib_req = 0;
 uint8_t gus_req = 0;
+uint8_t rx_buf[256];
 int16_t buf16[128];
 int16_t buf[128];
 void adlib_init(uint32_t samplerate);
@@ -25,6 +30,7 @@ uint8_t wg_addr[65536];
 uint8_t wg_data[65536];
 uint16_t wg_rx;
 uint16_t wg_tx;
+uint8_t hdd_flush = 0;
 
 #define DI0           0
 #define DI1           1
@@ -113,22 +119,33 @@ void* gus_worker(void*) {
       GUS_CallBack(64);
       gus_req = 2;
     }
-/*
-    if(wg_rx!=wg_tx) {
-      write_gus(0x300|wg_addr[wg_tx], wg_data[wg_tx]);
-      wg_tx++;
-    }
-*/
   }
   return NULL;
 }
 
+void *mouse_worker(void *) {
+  int mfile;
+  char data[3];
+  const char *mdev = "/dev/input/mouse0";
+
+  mfile = open(mdev, O_RDONLY);
+  for(;;)
+    if(!audio_busy)
+      if(read(mfile, data, 3)==3) {
+        rx_buf[((rx_write<<2)  )&255] = 0x33;
+        rx_buf[((rx_write<<2)|1)&255] = data[0];
+        rx_buf[((rx_write<<2)|2)&255] = data[1];
+        rx_buf[((rx_write<<2)|3)&255] = data[2];
+        rx_write++;
+      }
+}
+
 int main(void) {
   int rd = 0, wr = 0, lba = 0, chs = 0, c = 0, h = 0, s = 0, i = 0, j;
-  char mouse_buttons, mouse_dx, mouse_dy;
   unsigned char addr, data, *hdd, areg;
+  unsigned char blocks[256*16*63]; // keeps track of written blocks
   FILE *hdd_file;
-  pthread_t tha, thg;
+  pthread_t tha, thg, thm;
 
   s = 512*256*16*63;
   hdd = (unsigned char*)malloc(s);
@@ -170,6 +187,7 @@ int main(void) {
   adlib_init(44100);
   pthread_create(&thg, NULL, gus_worker, NULL);
   pthread_create(&tha, NULL, adlib_worker, NULL);
+  pthread_create(&thm, NULL, mouse_worker, NULL);
 
   for(;;) {
     set_state(FPGA_SYNC);
@@ -182,31 +200,27 @@ int main(void) {
       if(digitalRead(DI8)) addr = data;
       else {
 	if(addr>0x40 && addr<0x49) {            // gravis ultrasound
-//          wg_addr[wg_rx] = addr;
-//          wg_data[wg_rx] = data;
-//          wg_rx++;
           write_gus(0x300|addr, data);
         }
         if(addr==0x70) {                        // HDD control/status port
           if(data==0) { rd = 0; wr = 512; chs=0; }
           if(data==1) { rd = 512; wr = 0; }
+          if(data==2) {
+            printf("Writing...\n");
+            hdd_file = fopen("compact.img", "wb");
+            i = fwrite(hdd, 1, 512*256*16*63, hdd_file);
+            fclose(hdd_file);
+            printf("...wrote %d bytes\n", i);
+          }
         }
         if(addr==0x71) {                        // HDD read/write port
           if(chs==0) { c = data; chs++; }
           else if(chs==1) { h = data; chs++; }
           else if(chs==2) { s = data; chs++; lba = 512*(63*(16*c+h)+s-1); }
-          else if(wr) hdd[lba++] = data;
+          else if(wr) { blocks[lba>>9] = 1; hdd[lba++] = data; }
         }
         if(addr==0x88) areg = data;             // ADLIB register port
         if(addr==0x89) adlib_write(areg, data); // ADLIB data port
-/*
-        if(addr==0x72) {                        // respond with mouse state
-          set_state(4);
-          outd(mouse_buttons); CLK();
-          outd(mouse_dx); CLK();
-          outd(mouse_dy); CLK();
-        }
-*/
       }
     }
 
@@ -230,18 +244,37 @@ int main(void) {
       digitalWrite(CLOCK, 0);
       CLK();
       audio_busy--;
-    }
-
-    if(rd) {
-      set_state(FPGA_HD_FIFO);
-      outd(hdd[lba++]);
-      CLK();
-      rd--;
-    }
-
-    if(digitalRead(FPGA_RX_REQ) && audio_busy==0 && adlib_req==0 && gus_req==0) {
-      adlib_req = 1;
-      gus_req = 1;
+    } else {
+      if(rx_read!=rx_write) {
+        set_state(FPGA_RX_FIFO);
+        outd(rx_buf[((rx_read<<2)  )&255]);
+        digitalWrite(CLOCK, 1);
+        digitalWrite(CLOCK, 1);
+        digitalWrite(CLOCK, 1);
+        outd(rx_buf[((rx_read<<2)|1)&255]);
+        digitalWrite(CLOCK, 0);
+        digitalWrite(CLOCK, 0);
+        digitalWrite(CLOCK, 0);
+        outd(rx_buf[((rx_read<<2)|2)&255]);
+        digitalWrite(CLOCK, 1);
+        digitalWrite(CLOCK, 1);
+        digitalWrite(CLOCK, 1);
+        outd(rx_buf[((rx_read<<2)|3)&255]);
+        digitalWrite(CLOCK, 0);
+        digitalWrite(CLOCK, 0);
+        digitalWrite(CLOCK, 0);
+        rx_read++;
+      }
+      if(rd) {
+        set_state(FPGA_HD_FIFO);
+        outd(hdd[lba++]);
+        CLK();
+        rd--;
+      }
+      if(digitalRead(FPGA_RX_REQ) && adlib_req==0 && gus_req==0) {
+        adlib_req = 1;
+        gus_req = 1;
+      }
     }
     if(adlib_req == 2 && gus_req == 2) {
       audio_busy = 64;

@@ -121,6 +121,13 @@ reg   [7:0] gus_ram[15:0];
 reg   [7:0] gus_voice;
 reg   [7:0] waitstate;
 
+reg   [2:0] in_state;
+reg   [7:0] in_port;
+reg  [15:0] mouse_x;
+reg  [15:0] mouse_y;
+reg   [1:0] mouse_buttons;
+reg   [2:0] mouse_state;
+
 initial
 begin
 	DRQ1 = 1'bZ;
@@ -141,12 +148,24 @@ begin
 		if({STATE2, STATE1, STATE0} == 0)
 		begin
 			if(o_rd_address==o_wr_address) FPGA_TX_REQ <= 0;
-			else FPGA_TX_REQ <= 1;			
+			else FPGA_TX_REQ <= 1;
+			in_state <= 0;
 		end
 		if({STATE2, STATE1, STATE0} == 1 && past_state == 0) o_rd_address <= o_rd_address + 1;
 		if({STATE2, STATE1, STATE0} == 4) i_wr_address <= i_wr_address + 1;
 		past_state <= {STATE2, STATE1, STATE0};
 	end
+	
+	// process port-like input from RP
+	if({STATE2, STATE1, STATE0} == 2)
+		if(CLOCKr==2'b01 || CLOCKr==2'b10)
+		begin
+			in_state <= in_state + 1;
+			if(in_state==0) in_port <= {GPIO16, GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9};
+			if(in_state==1 && in_port==8'h33) mouse_buttons <= {GPIO16, GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9};
+			if(in_state==2 && in_port==8'h33) mouse_x <= mouse_x + $signed({GPIO16, GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9});
+			if(in_state==3 && in_port==8'h33) mouse_y <= mouse_y + $signed({GPIO16, GPIO15, GPIO14, GPIO13, GPIO12, GPIO11, GPIO10, GPIO9});
+		end
 	
 	// BOF: sound blaster dma routines
 	if(sb_DMA_length>0 && DRQ1==0)
@@ -277,6 +296,13 @@ begin
 				o_data <= {1'b0, D};
 			end
 
+			// mouse
+			10'h172:
+			begin
+				mouse_x <= 0;
+				mouse_y <= 0;
+			end
+			
 			// sound blaster
 			10'h22c:
 			begin
@@ -385,6 +411,21 @@ begin
 				if(wr) D <= (o_wr_address==o_rd_address);
 			end
 			10'h171:	D <= i_data;
+
+			// mouse
+			10'h172:
+			begin
+				D <= mouse_buttons;
+				mouse_state <= 0;
+			end
+			10'h173:
+			begin
+				if(mouse_state==0) D <= mouse_x[9:2];
+				if(mouse_state==1) D <= {2'b0, mouse_x[15:10]};
+				if(mouse_state==2) D <= mouse_y[9:2];
+				if(mouse_state==3) D <= {2'b0, mouse_y[15:10]};
+				mouse_state <= mouse_state + 1;
+			end
 			
 			// sound blaster
 			10'h22a:
