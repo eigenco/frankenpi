@@ -25,6 +25,7 @@ Youtube link here: https://www.youtube.com/watch?v=1ej76w8sHxY
 
 TESTED and working:
 - Wolfenstein 3D (SB & Adlib)
+- Second Reality (GUS)
 - Scream Tracker 3.21 (SB1 and GUS)
 - Skyroads (SB & Adlib)
 - Keen 4 (Adlib)
