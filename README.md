@@ -5,6 +5,7 @@ What currently works (to some degree), i.e. PC can access through ISA
 - Adlib data and reverse audio data back from Raspberry Pi to optical SPDIF (adlib works pretty much perfectly)
 - Sound Blaster 8-bit mono with DMA and IRQ, simultaneously to optical SPDIF (with limitations)
 - Gravis Ultrasound forward fed wavetable functions and simultaneous feed back to optical SPDIF (limited compatibility, read below, no DMA/IRQ)
+- Mouse with USB mouse plugged in to the Raspberry Pi, demo in MOUSE.PAS (doesn't work with general purpose mouse driver yet)
 
 This is an experimental project to connect Raspberry Pi with the help of cheap Cyclone IV board to 8-bit ISA bus to act as multiple different devices.
 
@@ -32,9 +33,9 @@ TESTED and working:
 - Lotus 3 (Adlib)
 - Lemmings (Adlib)
 - 669 player (GUS)
+- MOUSE.PAS
 
 Planned
 - General MIDI
 - Roland MT-32 support
 - Sound Blaster AWE32 wavetable support
-- Mouse support through Raspberry Pi USB
