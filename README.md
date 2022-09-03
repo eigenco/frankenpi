@@ -39,3 +39,6 @@ Planned
 - General MIDI
 - Roland MT-32 support
 - Sound Blaster AWE32 wavetable support
+- Compatibility improvements
+- Boot ROM in the FPGA so hacked VGABIOS isn't required (needs a few more pins than my current board has available)
+- Upgrade to bigger FPGA so one board could also act as VGA adapter
