@@ -1,9 +1,9 @@
 /*
 g++ -O2 -c opl.cpp;g++ -O2 -c gus.cpp;g++ -O0 pc.cpp opl.o gus.o -lwiringPi -lm -lpthread -o pc
 
-run as root and do this before running:
-
+run as root and do the following before running:
 echo -1 > /proc/sys/kernel/sched_rt_runtime_us
+add to /boot/cmdline.txt isolcpus=1,2,3
 */
 
 #include <unistd.h>
@@ -94,6 +94,13 @@ void CLK() {
 }
 
 void* adlib_worker(void*) {
+  cpu_set_t cpuset;
+  pthread_t thread;
+  thread = pthread_self();
+  CPU_ZERO(&cpuset);
+  CPU_SET(2, &cpuset);
+  pthread_setaffinity_np(thread, sizeof(cpuset), &cpuset);
+
   adlib_init(44100);
   for(;;)
     if(adlib_req==1) {
@@ -104,6 +111,13 @@ void* adlib_worker(void*) {
 }
 
 void* gus_worker(void*) {
+  cpu_set_t cpuset;
+  pthread_t thread;
+  thread = pthread_self();
+  CPU_ZERO(&cpuset);
+  CPU_SET(3, &cpuset);
+  pthread_setaffinity_np(thread, sizeof(cpuset), &cpuset);
+
   init_gus();
   for(;;) {
     if(gus_req==1) {
@@ -117,6 +131,13 @@ void* gus_worker(void*) {
 int main(void) {
   unsigned char addr, data, areg, ad = 0;
   pthread_t tha, thg;
+
+  cpu_set_t cpuset;
+  pthread_t thread;
+  thread = pthread_self();
+  CPU_ZERO(&cpuset);
+  CPU_SET(1, &cpuset);
+  pthread_setaffinity_np(thread, sizeof(cpuset), &cpuset);
 
   wiringPiSetupGpio();
 

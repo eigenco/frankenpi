@@ -281,7 +281,7 @@ begin
 		if(IORr==2'b01) D <= 8'hZ;
 	end
 
-	if(cnt[23:0]==0)
+	if(cnt[24:0]==33554431)
 	begin
 	/*
 		if(buff>2047) leds <= 255; else
@@ -305,9 +305,9 @@ begin
 		if(buff<128) leds <= 127; else
 		leds <= 255;
 		buff <= 4095;
-	end
+	end else
+		if(audio_buffer_state<buff) buff <= audio_buffer_state;
 	
-	if(audio_buffer_state<buff) buff <= audio_buffer_state;
 	/*
 	if(o_rd_address<=o_wr_address && (o_wr_address-o_rd_address)>buff) buff <= o_wr_address-o_rd_address;
 	else if((4096-(o_rd_address-o_wr_address)) > buff) buff <= (4096-(o_rd_address-o_wr_address));
