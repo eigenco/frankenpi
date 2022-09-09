@@ -103,8 +103,9 @@ reg  [7:0] adlib_reg;
 reg  [7:0] gus_global;
 reg [19:0] gus_addr;
 reg  [7:0] gus_ram[15:0];
-reg  [7:0] gus_voice;
 reg  [8:0] waitstate;
+
+reg  [7:0] sb_DSP_reg;
 
 initial
 begin
@@ -150,7 +151,7 @@ begin
 	IOWr <= {IOWr[0], IOW};
 	IORr <= {IORr[0], IOR};
 	
-	if(waitstate>0) waitstate <= waitstate - 1;	
+	if(waitstate>0) waitstate <= waitstate - 1;
 	if(AEN==0 && waitstate==0)
 	begin
 		CHRDY <= 1'bZ;
@@ -206,6 +207,10 @@ begin
 		endcase
 		if(IOWr==2'b01)
 		case(A)
+			10'h22c:
+			begin
+				sb_DSP_reg <= D;
+			end
 			10'h341:
 			begin
 				o_wr_address <= o_wr_address + 1;
@@ -215,7 +220,6 @@ begin
 			begin
 				o_wr_address <= o_wr_address + 1;
 				o_data <= D;
-				gus_voice <= D & 31;
 			end
 			10'h343:
 			begin
@@ -263,19 +267,21 @@ begin
 		endcase
 		if(IORr==2'b10)
 		case(A)
-			10'h342: D <= gus_voice;
+			10'h22a:
+			begin
+				if(sb_DSP_reg==8'he1) D <= 1;
+				else D <= 8'haa;
+			end
+			10'h22c: D <= 0;
+			10'h22e: D <= 8'hff;
 			10'h343: D <= gus_global;
-			10'h344: D <= 255;
-			10'h345:	if(gus_global==8'h49) D <= 0;	else D <= 255;
-			10'h346: D <= 8'hFF;
 			10'h347: D <= gus_ram[gus_addr];
-			10'h349: D <= 0;
 			10'h388: D <= adlib_detect;
 		endcase
 		if(IORr==2'b01) D <= 8'hZ;
 	end
 
-	if(cnt[22:0]==0)
+	if(cnt[23:0]==0)
 	begin
 	/*
 		if(buff>2047) leds <= 255; else
@@ -297,7 +303,7 @@ begin
 		if(buff<32) leds <= 31; else
 		if(buff<64) leds <= 63; else
 		if(buff<128) leds <= 127; else
-		leds <= 0;
+		leds <= 255;
 		buff <= 4095;
 	end
 	

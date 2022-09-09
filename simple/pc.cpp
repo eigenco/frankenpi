@@ -1,5 +1,9 @@
 /*
 g++ -O2 -c opl.cpp;g++ -O2 -c gus.cpp;g++ -O0 pc.cpp opl.o gus.o -lwiringPi -lm -lpthread -o pc
+
+run as root and do this before running:
+
+echo -1 > /proc/sys/kernel/sched_rt_runtime_us
 */
 
 #include <unistd.h>
