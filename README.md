@@ -13,6 +13,8 @@ Hdd works, including writing, adlib and pcm through SPDIF works. DMA and IRQ wor
 
 Cleaned up the verilogs (c4.v) a bit and the server code running on Raspberry Pi (pc.cpp) as well.
 
+Need to do another cleanup, a bunch of files now randomly here. Decided to run on Raspberry Pi with isolated CPUs and a few other realtime tweaks to guarantee no buffer underruns. The latests files are currently in the rtl and rpi directories.
+
 Forward feed of data to GUS works and audio data backwards to SPDIF, but GUS as it stands now isn't really detected by much anything except Scream Tracker 3.21. There is no backwards flow of data which prevents many things from working. I implemented the waitstate for GUS memory uploads so scream tracker works perfectly now with GUS (I temporarily used soldered the midi pin to chrdy for this purpose and will make a new board later). The 669 player with source works ok too. Sound quality is quite nice compared to SB.
 
 Remember to set video BIOS shadow on in BIOS to gain a lot in hdd speed.
