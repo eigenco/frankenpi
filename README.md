@@ -3,7 +3,7 @@
 This is an experimental project to connect Raspberry Pi with the help of cheap Cyclone IV FPGA board to 8-bit ISA bus to act as multiple different devices.
 
 What is currently implemented (to some degree), i.e. PC can access through ISA
-- Mass storage access from a file on the Raspberry Pi (flushed every 2 seconds by default)
+- Mass storage access from a file on the Raspberry Pi (written sectors are flushed every 2 seconds by default)
 - Adlib output to optical SPDIF
 - Sound Blaster 8-bit mono with DMA and IRQ (basic functions only), output to optical SPDIF
 - Gravis Ultrasound (basic wavetable only), output to optical SPDIF
