@@ -7,7 +7,7 @@ What is currently implemented (to some degree), i.e. PC can access through ISA
 - Adlib output to optical SPDIF
 - Sound Blaster 8-bit mono with DMA and IRQ (basic functions only), output to optical SPDIF
 - Gravis Ultrasound (basic wavetable only), output to optical SPDIF
-- USB mouse plugged into the Raspberry Pi will appear as a kind of serial mouse in DOS, custom ctmouse driver is provided
+- USB mouse plugged into the Raspberry Pi will appear as a kind of serial mouse in DOS, custom ctmouse driver is provided (start with /v)
 - Boot from custom TVGA9000i VGABIOS, i.e. no other devices are required to be present in the ISA bus besides FrakenPi and VGA-adapter
 
 Youtube link here: https://www.youtube.com/watch?v=1ej76w8sHxY
