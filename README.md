@@ -30,5 +30,23 @@ Planned
 - General MIDI
 - Roland MT-32 support
 - Sound Blaster AWE32 wavetable support
+- Standard ATA at ports 1f0h-1f7h
 - Compatibility improvements
 - Boot ROM in the FPGA so hacked VGABIOS isn't required
+
+Used resources
+- Harddisk: ports 170h-171h
+- SoundBlaster: ports 22ah-22eh, IRQ 7 and DMA 1
+- Gravis Ultrasound: ports 341h-347h
+- Adlib: ports 388h-389h
+- Mouse: port 3f8h and IRQ 4 (COM1)
+- Bootcode for custom int 13h resides in hacked VGABIOS at the end of C0000-C7FFF memory region
+
+Further explanation
+- Outgoing port operations are transferred from the FPGA to the Raspberry Pi GPIO using dedicated unidirectional 8-bit data bus
+- Incoming data from the Raspberry Pi GPIO (PCM, harddisk, mouse) is transferred using dedicated unidirectional 8-bit data bus
+- Raspberry Pi: CPU0 handles hdd flushing and mouse, CPU1 handles GPIO transfers, CPU2 handles Adlib and CPU3 Gravis Ultrasound
+- Raspberry Pi operates with CPU1-CPU3 in isolated mode, all CPUs run at constant 1 GHz and sched_rt_runtime_us is -1
+- Currently the Raspberry Pi generates sound data 64 samples at a time (16-bit stereo corresponds to 256 bytes it must transfer every 1.45ms or so)
+- SPDIF is running in 24-bit 44100 Hz Stereo
+- Hardcoded harddisk image is raw data with CHS 256/16/63, i.e. approx. 126MiB
