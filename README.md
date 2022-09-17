@@ -36,8 +36,8 @@ Planned
 
 Used resources
 - Harddisk: ports 170h-171h
-- SoundBlaster: ports 22ah-22eh, IRQ 7 and DMA 1
-- Gravis Ultrasound: ports 341h-347h
+- SoundBlaster: ports 22ah-22eh corresponding ot base address of 220h, IRQ 7 and DMA 1
+- Gravis Ultrasound: ports 341h-347h corresponding to base address of 240h
 - Adlib: ports 388h-389h
 - Mouse: port 3f8h and IRQ 4 (COM1)
 - Bootcode for custom int 13h resides in hacked VGABIOS at the end of C0000-C7FFF memory region
