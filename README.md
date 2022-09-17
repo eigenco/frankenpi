@@ -47,6 +47,6 @@ Further explanation
 - Incoming data from the Raspberry Pi GPIO (PCM, harddisk, mouse) is transferred using dedicated unidirectional 8-bit data bus
 - Raspberry Pi: CPU0 handles hdd flushing and mouse, CPU1 handles GPIO transfers, CPU2 handles Adlib and CPU3 Gravis Ultrasound
 - Raspberry Pi operates with CPU1-CPU3 in isolated mode, all CPUs run at constant 1 GHz and sched_rt_runtime_us is -1
-- Currently the Raspberry Pi generates sound data 64 samples at a time (16-bit stereo corresponds to 256 bytes it must transfer every 1.45ms or so)
+- Raspberry Pi generates sound data 64 samples at a time (16-bit stereo corresponds to 256 bytes it must transfer every 1.45ms or so)
 - SPDIF is running in 24-bit 44100 Hz Stereo
 - Hardcoded harddisk image is raw data with CHS 256/16/63, i.e. approx. 126MiB
