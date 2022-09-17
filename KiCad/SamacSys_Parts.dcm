@@ -1,0 +1,27 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP NE555DR
+D Single Precision Timer
+K
+F http://www.ti.com/lit/ds/symlink/ne555.pdf
+$ENDCMP
+#
+$CMP 10CL006YE144C8G
+D FPGA - Field Programmable Gate Array
+K
+F https://componentsearchengine.com/Datasheets/1/10CL006YE144C8G.pdf
+$ENDCMP
+#
+$CMP TOTX1353_V,F_
+D Fiber Optic Transmitters, Receivers, Transceivers Fiber Optic Module 0.5Mb 4.75V-5.25V
+K
+F https://toshiba.semicon-storage.com/info/docget.jsp?did=14712&prodName=TOTX1353(V,F)
+$ENDCMP
+#
+$CMP TOTX1350_F_
+D Fiber Optic Transmitters, Receivers, Transceivers TOSLINK General Purpose Modules
+K
+F https://toshiba.semicon-storage.com/info/docget.jsp?did=14728&prodName=TOTX1350(F)
+$ENDCMP
+#
+#End Doc Library
