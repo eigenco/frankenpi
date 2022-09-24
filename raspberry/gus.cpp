@@ -14,7 +14,7 @@ extern "C" int16_t buf16[128];
 //void init_gus(void);
 //void GUS_CallBack(uint16_t len);
 //void write_gus(uint16_t port, uint8_t val);
-extern int16_t buf16[128];
+//extern int16_t buf[128];
 
 #define WAVE_BITS 2
 #define WAVE_FRACT (9+WAVE_BITS)
@@ -391,7 +391,7 @@ void write_gus(uint16_t port,uint8_t val) {
 	}
 }
 
-void GUS_CallBack(uint16_t len) {
+void GUS_CallBack(int16_t* buf, uint16_t len) {
 	memset(&MixTemp,0,len*8);
 	uint16_t i;
 	//buf16 = (int16_t *)MixTemp;
@@ -407,7 +407,7 @@ void GUS_CallBack(uint16_t len) {
 			sample=-32768;
 			AutoAmp--;
 		}
-		buf16[i] = (int16_t)(sample);
+		buf[i] = (int16_t)(sample);
 	}
 }
 

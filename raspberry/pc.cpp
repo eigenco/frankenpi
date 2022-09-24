@@ -1,12 +1,8 @@
 /*
-g++ -O3 -c opl.cpp;g++ -O3 -c gus.cpp;g++ -O0 pc.cpp opl.o gus.o -lwiringPi -lm -lpthread -o pc
-g++ -O2 -c opl.cpp;g++ -O2 -c gus.cpp;g++ -O0 pc.cpp opl.o gus.o -lwiringPi -lm -lpthread -o pc
-g++ -O0 -c opl.cpp;g++ -O0 -c gus.cpp;g++ -O0 pc.cpp opl.o gus.o -lwiringPi -lm -lpthread -o pc
-g++ -fsigned-char -O0 pc.cpp opl.o gus.o -lwiringPi -lm -lpthread -o pc
+g++ -O2 -c opl.cpp;g++ -O2 -c gus.cpp
+g++ -fsigned-char -O0 pc.cpp opl.o gus.o -lwiringPi -lm -lpthread -lmt32emu -o pc
 
-run as root and do the following before running:
-echo -1 > /proc/sys/kernel/sched_rt_runtime_us
-add to /boot/cmdline.txt isolcpus=1,2,3
+run with run.sh as root and add to /boot/cmdline.txt isolcpus=1,2,3 before running
 */
 
 #include <unistd.h>
@@ -18,27 +14,40 @@ add to /boot/cmdline.txt isolcpus=1,2,3
 #include <stdint.h>
 #include <pthread.h>
 #include <wiringPi.h>
+#define MT32EMU_API_TYPE 3
+#include <mt32emu/mt32emu.h>
 
 void init_gus(void);
 void write_gus(uint16_t addr, uint8_t data);
-void GUS_CallBack(uint16_t len);
+void GUS_CallBack(int16_t* buf, uint16_t len);
 void adlib_init(uint32_t samplerate);
 void adlib_write(uint16_t idx, uint8_t val);
 void adlib_getsample(short* sndptr, short numsamples);
 
+typedef uint8_t Bit8u;
+typedef int16_t Bit16s;
+typedef uint32_t Bit32u;
+
 static uint8_t audio_busy = 0;
 static uint8_t adlib_req = 0;
 static uint8_t gus_req = 0;
-int16_t buf16[128];
-int16_t buf[128];
-uint8_t rx_buf[256];
-volatile uint8_t rx_read = 0;
-volatile uint8_t rx_write = 0;
+//int16_t buf16[128];
+static int16_t buf[128];
+static int16_t buf2[128];
+static uint8_t rx_buf[256];
+static volatile uint8_t rx_read = 0;
+static volatile uint8_t rx_write = 0;
 uint8_t *hdd;
 uint8_t dirty[256*16*63];
 uint8_t dirt = 0;
 FILE *hdd_file;
 volatile int wr = 0;
+static uint8_t mt32_buf[256];
+static uint8_t mt32_rd = 0;
+static uint8_t mt32_wr = 0;
+static uint8_t adlib = 1;
+static uint8_t mt32 = 0;
+static uint8_t gus = 0;
 
 #define DI0           0
 #define DI1           1
@@ -117,7 +126,7 @@ void* adlib_worker(void*) {
   pthread_setaffinity_np(thread, sizeof(cpuset), &cpuset);
 
   adlib_init(44100);
-  for(;;)
+  while(adlib)
     if(adlib_req==1) {
       adlib_getsample(buf, 64);
       adlib_req = 2;
@@ -130,15 +139,42 @@ void* gus_worker(void*) {
   pthread_t thread;
   thread = pthread_self();
   CPU_ZERO(&cpuset);
-  CPU_SET(3, &cpuset);
+  CPU_SET(2, &cpuset);
   pthread_setaffinity_np(thread, sizeof(cpuset), &cpuset);
 
   init_gus();
-  for(;;) {
-    if(gus_req==1) {
-      GUS_CallBack(64);
-      gus_req = 2;
+  while(gus)
+    if(adlib_req==1) {
+      GUS_CallBack(buf, 64);
+      adlib_req = 2;
     }
+  return NULL;
+}
+
+MT32Emu::Service *service;
+void *mt32_worker(void*) {
+  cpu_set_t cpuset;
+  pthread_t thread;
+  thread = pthread_self();
+  CPU_ZERO(&cpuset);
+  CPU_SET(2, &cpuset);
+  pthread_setaffinity_np(thread, sizeof(cpuset), &cpuset);
+
+  static mt32emu_report_handler_i mt32_rhi;
+  service = new MT32Emu::Service();
+  service->createContext(mt32_rhi, NULL);
+  service->addROMFile("CM32L_CONTROL.ROM");
+  service->addROMFile("CM32L_PCM.ROM");
+  service->setStereoOutputSampleRate(44100);
+  service->openSynth();
+
+  while(mt32) {
+    if(adlib_req==1) {
+      for(int i=0; i<128; i++) buf[i] = buf2[i];
+      adlib_req = 2;
+      service->renderBit16s(buf2, 64);
+    } /*else if(mt32_rd!=mt32_wr)
+      service->parseStream((uint8_t*)&mt32_buf[mt32_rd++], 1);*/
   }
   return NULL;
 }
@@ -163,8 +199,7 @@ void *mouse_worker(void *) {
         rx_buf[rx_write++] = 0x40|((data[0]&1)<<5)|((data[0]&2)<<3)|((data[2]&0xC0)>>4)|((data[1]&0xC0)>>6);
         rx_buf[rx_write++] = data[1]&63;
         rx_buf[rx_write++] = data[2]&63;
-      }
-    else usleep(10);
+      } else usleep(10);
   }
 
   return NULL;
@@ -206,14 +241,7 @@ void *hdflush_worker(void *) {
 int main(void) {
   volatile int rd = 0, lba = 0, chs = 0, c = 0, h = 0, s = 0, i = 0, j;
   volatile unsigned char addr, data, areg, ad = 0;
-  pthread_t tha, thg, thm, thh;
-
-  cpu_set_t cpuset;
-  pthread_t thread;
-  thread = pthread_self();
-  CPU_ZERO(&cpuset);
-  CPU_SET(1, &cpuset);
-  pthread_setaffinity_np(thread, sizeof(cpuset), &cpuset);
+  pthread_t thread_adlib, thread_gus, thread_mouse, thread_hdd, thread_mt32;
 
   s = 512*256*16*63;
   hdd = (uint8_t*)malloc(s);
@@ -250,10 +278,20 @@ int main(void) {
   pinMode(STATE1, OUTPUT);
   pinMode(STATE2, OUTPUT);
 
-  pthread_create(&tha, NULL, adlib_worker, NULL);
-  pthread_create(&thg, NULL, gus_worker, NULL);
-  pthread_create(&thm, NULL, mouse_worker, NULL);
-  pthread_create(&thh, NULL, hdflush_worker, NULL);
+  // audio generating thread runs on isolated core 2
+  pthread_create(&thread_adlib, NULL, adlib_worker, NULL);
+
+  // gpio controlling thread runs on isolated core 1
+  cpu_set_t cpuset;
+  pthread_t thread;
+  thread = pthread_self();
+  CPU_ZERO(&cpuset);
+  CPU_SET(1, &cpuset);
+  pthread_setaffinity_np(thread, sizeof(cpuset), &cpuset);
+
+  // miscellaneous threads run on core 0
+  pthread_create(&thread_mouse, NULL, mouse_worker, NULL);
+  pthread_create(&thread_hdd, NULL, hdflush_worker, NULL);
 
   for(;;) {
     set_state(STATE_SY);
@@ -268,6 +306,14 @@ int main(void) {
       ad = ~ad;
       if(ad) addr = data;
       else {
+        if(addr==0x32) {
+          if(data==0) { adlib = 0; mt32 = 0; gus = 0; }
+          if(data==1) { adlib = 1; mt32 = 0; gus = 0; pthread_create(&thread_adlib, NULL, adlib_worker, NULL); }
+          if(data==2) { adlib = 0; mt32 = 1; gus = 0; pthread_create(&thread_mt32, NULL, mt32_worker, NULL); }
+          if(data==3) { adlib = 0; mt32 = 0; gus = 1; pthread_create(&thread_gus, NULL, gus_worker, NULL); }
+        }
+        if(addr==0x30) service->parseStream((uint8_t*)&data, 1);
+        //if(addr==0x30) mt32_buf[mt32_wr++] = data;
 	if(addr>0x40 && addr<0x49) write_gus(0x300|addr, data);
         if(addr==0x70) {
           if(data==0) { rd = 0; wr = 512; chs=0; }
@@ -286,22 +332,20 @@ int main(void) {
 
     if(audio_busy) {
       set_state(STATE_AU);
-      outd((buf[(64-audio_busy)<<1]>>8)+(buf16[(64-audio_busy)<<1]>>8));
+      outd((buf[(64-audio_busy)<<1]>>8));
       CLK();
-      outd((buf[(64-audio_busy)<<1]&255)+(buf16[(64-audio_busy)<<1]&255));
+      outd((buf[(64-audio_busy)<<1]&255));
       CLK();
-      outd((buf[((64-audio_busy)<<1)+1]>>8)+(buf16[((64-audio_busy)<<1)+1]>>8));
+      outd((buf[((64-audio_busy)<<1)+1]>>8));
       CLK();
-      outd((buf[((64-audio_busy)<<1)+1]&255)+(buf16[((64-audio_busy)<<1)+1]&255));
+      outd((buf[((64-audio_busy)<<1)+1]&255));
       CLK();
       CLK();
       CLK();
       audio_busy--;
     } else {
-      if(digitalRead(FPGA_AU_REQ) && adlib_req==0 && gus_req==0) {
+      if(digitalRead(FPGA_AU_REQ) && adlib_req==0)
         adlib_req = 1;
-        gus_req = 1;
-      }
       if(rd) {
         set_state(STATE_HD);
         outd(hdd[lba++]);
@@ -314,10 +358,9 @@ int main(void) {
         CLK();
       }
     }
-    if(adlib_req == 2 && gus_req == 2) {
+    if(adlib_req == 2) {
       audio_busy = 64;
       adlib_req = 0;
-      gus_req = 0;
     }
   }
   return 0;
