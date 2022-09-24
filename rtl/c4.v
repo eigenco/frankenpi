@@ -200,6 +200,16 @@ begin
 				o_wr_address <= o_wr_address + 1;
 				o_data <= A[7:0];				
 			end
+			10'h330:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= A[7:0];
+			end
+			10'h332:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= A[7:0];
+			end
 			10'h341:
 			begin
 				o_wr_address <= o_wr_address + 1;
@@ -266,6 +276,36 @@ begin
 			end
 			
 			// sound blaster
+			/*
+			10'h220:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= D;
+				adlib_detect <= 0;
+				adlib_reg <= D;
+			end
+			10'h221:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= D;
+				if(adlib_reg==8'h60 && D==8'h04) adlib_detect <= 8'h00;
+				if(adlib_reg==8'h04 && D==8'h21) adlib_detect <= 8'hC0;
+			end
+			10'h228:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= D;
+				adlib_detect <= 0;
+				adlib_reg <= D;
+			end
+			10'h229:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= D;
+				if(adlib_reg==8'h60 && D==8'h04) adlib_detect <= 8'h00;
+				if(adlib_reg==8'h04 && D==8'h21) adlib_detect <= 8'hC0;
+			end
+			*/
 			10'h22c:
 			begin
 				sb_DSP_reg <= D;
@@ -295,6 +335,16 @@ begin
 				end
 			end
 			
+			10'h330:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= D;			
+			end			
+			10'h332:
+			begin
+				o_wr_address <= o_wr_address + 1;
+				o_data <= D;			
+			end			
 			10'h341:
 			begin
 				o_wr_address <= o_wr_address + 1;
@@ -365,6 +415,9 @@ begin
 			10'h171:	D <= i_data;
 			
 			// sound blaster
+			//10'h220: D <= adlib_detect;
+			//10'h228: D <= adlib_detect;
+			
 			10'h22a:
 			begin
 				if(sb_DSP_reg==8'he1) D <= 1;
@@ -372,6 +425,9 @@ begin
 			end
 			10'h22c: D <= 0;
 			10'h22e: D <= 8'hff;
+			
+			10'h330: D <= 8'hfe;
+			10'h331: D <= 8'hbf;
 			
 			10'h343: D <= gus_global;
 			10'h347: D <= gus_ram[gus_addr];
