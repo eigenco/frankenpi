@@ -12,6 +12,7 @@ What is currently implemented (to some degree), i.e. PC can access through ISA
 - Boot from custom TVGA9000i VGABIOS, i.e. no other devices are required to be present in the ISA bus besides FrakenPi and VGA-adapter
 
 Youtube links:
+
 https://www.youtube.com/watch?v=1ej76w8sHxY
 
 https://www.youtube.com/watch?v=CkwgHHmKaSI
