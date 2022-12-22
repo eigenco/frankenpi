@@ -1,0 +1,19 @@
+cf000h in binary is 1100 1111 0000 0000 0000
+
+R0 1
+R1 1
+R2 1
+R3 1
+R4 0 (needs ground jumper)
+R5 0 (needs ground jumpter)
+R6 1
+R7 1
+
+[---]
+[   ]
+[---]
+[   ]
+[   ]
+[   ]
+[   ]
+[   ]

@@ -95,14 +95,21 @@ set_location_assignment PIN_127 -to GPIO7
 set_location_assignment PIN_125 -to GPIO8
 set_location_assignment PIN_120 -to GPIO9
 set_location_assignment PIN_115 -to GPIO10
+set_location_assignment PIN_58 -to IRQ1
 set_location_assignment PIN_67 -to IRQ2
-set_location_assignment PIN_52 -to IRQ3
-set_location_assignment PIN_54 -to IRQ4
-set_location_assignment PIN_58 -to IRQ5
-set_location_assignment PIN_60 -to IRQ6
-set_location_assignment PIN_65 -to IRQ7
-set_location_assignment PIN_33 -to DRQ1
-set_location_assignment PIN_38 -to DACK1
+set_location_assignment PIN_33 -to IRQ3
+set_location_assignment PIN_38 -to IRQ4
+set_location_assignment PIN_52 -to IRQ5
+set_location_assignment PIN_54 -to IRQ7
+set_location_assignment PIN_60 -to DRQ1
+set_location_assignment PIN_65 -to DACK1
+
+set_location_assignment PIN_10 -to OSC
+set_location_assignment PIN_28 -to ISACLK
+set_location_assignment PIN_42 -to A[10]
+set_location_assignment PIN_31 -to A[11]
+
+
 set_location_assignment PIN_83 -to RESET
 set_location_assignment PIN_84 -to SPDIF
 set_location_assignment PIN_124 -to GPIO11
@@ -112,10 +119,10 @@ set_location_assignment PIN_105 -to GPIO14
 set_location_assignment PIN_110 -to GPIO15
 set_location_assignment PIN_135 -to CLOCK
 set_location_assignment PIN_106 -to FPGA_TX_REQ
-set_location_assignment PIN_31 -to FPGA_RX_REQ
-set_location_assignment PIN_28 -to STATE0
-set_location_assignment PIN_137 -to STATE1
-set_location_assignment PIN_10 -to GPIO21
+set_location_assignment PIN_137 -to FPGA_RX_REQ
+set_location_assignment PIN_111 -to STATE0
+set_location_assignment PIN_114 -to STATE1
+set_location_assignment PIN_119 -to STATE2
 set_location_assignment PIN_69 -to AEN
 set_location_assignment PIN_71 -to CHRDY
 
@@ -146,4 +153,5 @@ set_global_assignment -name REMOVE_REDUNDANT_LOGIC_CELLS ON
 set_global_assignment -name SYNTH_PROTECT_SDC_CONSTRAINT ON
 set_global_assignment -name PHYSICAL_SYNTHESIS_EFFORT EXTRA
 set_global_assignment -name QIP_FILE mRAM.qip
+set_global_assignment -name QIP_FILE optrom.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

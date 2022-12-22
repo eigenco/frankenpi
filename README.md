@@ -56,3 +56,8 @@ Further explanation
 - Raspberry Pi generates sound data 64 samples at a time (16-bit stereo corresponds to 256 bytes it must transfer every 1.45ms or so)
 - SPDIF is running in 24-bit 44100 Hz Stereo
 - Hardcoded harddisk type is CHS 256/16/63, i.e. approx. 126MiB
+
+Plan for the next PCB
+- ICE40HX8K-CT256 (FPGA) seems to be available at Mouser
+- IS61WV102416FBLL-10TLI (2 MByte SRAM) seem to be available at Mouser
+- Created KiCAD project (PCB_v2)

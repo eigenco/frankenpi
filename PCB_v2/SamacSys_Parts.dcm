@@ -1,0 +1,15 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP NE555DR
+D Single Precision Timer
+K
+F http://www.ti.com/lit/ds/symlink/ne555.pdf
+$ENDCMP
+#
+$CMP ICE40HX8K-CT256
+D FPGA iCE40 HX Family 7680 Cells 40nm Technology 1.2V 256-Pin CSBGA
+K
+F https://www.arrow.com/en/products/ice40hx8k-ct256/lattice-semiconductor
+$ENDCMP
+#
+#End Doc Library

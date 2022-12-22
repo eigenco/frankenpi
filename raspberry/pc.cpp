@@ -2,7 +2,7 @@
 g++ -O2 -c opl.cpp;g++ -O2 -c gus.cpp
 g++ -fsigned-char -O0 pc.cpp opl.o gus.o -lwiringPi -lm -lpthread -lmt32emu -o pc
 
-run with run.sh as root and add to /boot/cmdline.txt isolcpus=1,2,3 before running
+run with run.sh and add to /boot/cmdline.txt isolcpus=1,2,3 before running
 */
 
 #include <unistd.h>
@@ -69,10 +69,10 @@ static uint8_t gus = 0;
 
 #define CLOCK        16
 #define FPGA_TX_REQ  17
-#define FPGA_AU_REQ  18
-#define STATE0       19
-#define STATE1       20
-#define STATE2       21
+#define FPGA_AU_REQ  20
+#define STATE0       22
+#define STATE1       23
+#define STATE2       24
 
 #define STATE_SY      0
 #define STATE_TX      1

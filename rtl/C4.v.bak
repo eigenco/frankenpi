@@ -2,24 +2,21 @@ module C4(
 	input             clk,
 	output reg  [7:0] leds,
 	
-	input      [11:0] A,           // ISA address
+	input       [9:0] A,           // ISA address
 	inout reg   [7:0] D,           // ISA data
 	input             IOR,         // ISA IOR
 	input             IOW,         // ISA IOW
 	input             MEMR,        // ISA MEMR
 	input             MEMW,        // ISA MEMW
-	input             IRQ1,        // ISA IRQ1 (custom pinout DACK0)
 	inout reg         IRQ2,        // ISA IRQ2
 	inout reg         IRQ3,        // ISA IRQ3
 	inout reg         IRQ4,        // ISA IRQ4
 	inout reg         IRQ5,        // ISA IRQ5
-
+	inout reg         IRQ6,        // ISA IRQ6
 	inout reg         IRQ7,        // ISA IRQ7
 	inout reg         DRQ1,        // ISA DRQ1
 	input             DACK1,       // ISA DACK1
 	input             AEN,         // ISA AEN
-	input             OSC,         // ISA OSC
-	input             ISACLK,      // ISA CLK
 
 	// F --> R data output
 	output            GPIO0,       // DO0
@@ -46,30 +43,30 @@ module C4(
 	output reg        FPGA_RX_REQ, // GPIO18: F --> R	
 	input             STATE0,      // GPIO19: F <-- R
 	input             STATE1,      // GPIO20: F <-- R
-	input             STATE2,      // GPIO21: AD
+	input             GPIO21,      // GPIO21: AD
 
 	output            SPDIF,
 	inout reg         CHRDY,
-	input             RESET
+	inout reg         RESET
 );
 
 /*
  PINOUT
 
- (7)    A0 OSC   (10)          GND GND
-(11)    A1 CLK   (28)            x R18  (137)
-(30)    A2 A11   (31)   (136)  R13 R16  (135)
-(32)    A3 IRQ3  (33)   (133)  R12 R6   (132)
-(34)    A4 IRQ4  (38)   (129)   R0 R5   (128)
-(39)    A5 A10   (42)   (127)   R7 R1   (126)
+ (7)    A0 ?     (10)          GND GND
+(11)    A1 ?     (28)            x R18  (137)
+(30)    A2 ?     (31)   (136)  R13 R16  (135)
+(32)    A3 DRQ1  (33)   (133)  R12 R6   (132)
+(34)    A4 DACK1 (38)   (129)   R0 R5   (128)
+(39)    A5 CLK   (42)   (127)   R7 R1   (126)
 (46)    A6 A9    (49)   (125)   R8 R11  (124)
-(50)    A7 A8    (51)   (121)  ROM R9   (120)
+(50)    A7 A8    (51)   (121)  R22 R9   (120)
 
-(52)  IRQ5 D7    (53)   (119)  R21 R10  (115)
-(54)  IRQ7 D6    (55)   (114)  R20 R19  (111)
-(58)  IRQ1 D5    (59)   (110)  R15 R17  (106)
-(60)  DRQ1 D4    (64)   (105)  R14 R4   (104)
-(65) DACK1 D3    (66)   (100)   R2 R3    (85)
+(52)  IRQ3 D7    (53)   (119)  R21 R10  (115)
+(54)  IRQ4 D6    (55)   (114)  R20 R19  (111)
+(58)  IRQ5 D5    (59)   (110)  R15 R17  (106)
+(60)  IRQ6 D4    (64)   (105)  R14 R4   (104)
+(65)  IRQ7 D3    (66)   (100)   R2 R3    (85)
 (67)  IRQ2 D2    (68)   (84) SPDIF RESET (83)
 (69)   AEN D1    (70)   (80)   IOR IOW   (77)
 (71) CHRDY D0    (72)   (76)  MEMR MEMW  (75)
@@ -105,22 +102,20 @@ reg  [15:0] sb_DMA_wait;
 
 initial
 begin
-	//IRQ1 = 1'bZ;
 	IRQ2 = 1'bZ;
 	IRQ3 = 1'bZ;
 	IRQ4 = 1'bZ;
 	IRQ5 = 1'bZ;
+	IRQ6 = 1'bZ;
 	IRQ7 = 1'bZ;
 	DRQ1 = 1'bZ;
 	CHRDY = 1'bZ;
-	//RESET = 1'bZ;
-	//ISACLK = 1'bZ;
-	//OSC = 1'bZ;
+	RESET = 1'bZ;
 end
 
 always @(posedge CLOCK)
 begin
-	case({STATE2, STATE1, STATE0})
+	case({GPIO21, STATE1, STATE0})
 		0:
 		begin
 			if(o_rd_address==o_wr_address) FPGA_TX_REQ <= 0;
@@ -141,7 +136,7 @@ begin
 			audio_byte <= audio_byte + 1;
 		end
 	endcase
-	past_state <= {STATE2, STATE1, STATE0};
+	past_state <= {GPIO21, STATE1, STATE0};
 end
 
 /******** ******** ******** ********/
@@ -155,8 +150,8 @@ begin
 	IORr <= {IORr[0], IOR};
 	CLKr <= {CLKr[0], CLOCK};
 	
-	if(CLKr==2'b01 && {STATE2, STATE1, STATE0}==2) i_wr_address <= i_wr_address + 1;
-	if(CLKr==2'b01 && {STATE2, STATE1, STATE0}==4) m_wr_address <= m_wr_address + 1;
+	if(CLKr==2'b01 && {GPIO21, STATE1, STATE0}==2) i_wr_address <= i_wr_address + 1;
+	if(CLKr==2'b01 && {GPIO21, STATE1, STATE0}==4) m_wr_address <= m_wr_address + 1;
 	if(IRQ4==0 && m_wr_address!=m_rd_address)	IRQ4 <= 1;
 	
 	// BOF: sound blaster dma routines
@@ -480,7 +475,7 @@ mRAM mRAM(
 	.rdaddress(m_rd_address),
 	.rdclock(sclk),
 	.wraddress(m_wr_address),
-	.wrclock({STATE2, STATE1, STATE0} == 4 ? CLOCK : 0),
+	.wrclock({GPIO21, STATE1, STATE0} == 4 ? CLOCK : 0),
 	.wren(1),
 	.q(m_data));
 
@@ -497,7 +492,7 @@ iRAM iRAM(
 	.rdaddress(i_rd_address),
 	.rdclock(sclk),
 	.wraddress(i_wr_address),
-	.wrclock({STATE2, STATE1, STATE0} == 2 ? CLOCK : 0),
+	.wrclock({GPIO21, STATE1, STATE0} == 2 ? CLOCK : 0),
 	.wren(1),
 	.q(i_data));
 	
@@ -516,15 +511,6 @@ oRAM oRAM (
 	.wren(1),	
 	.q({GPIO7, GPIO6, GPIO5, GPIO4, GPIO3, GPIO2, GPIO1, GPIO0}));	
 	
-/******** ******** ******** ********/
-
-//wire [7:0] opt_q;
-//
-//optrom optrom (
-//	.address(A[10:0]),
-//	.clock(sclk),
-//	.q(opt_q));
-
 /******** ******** ******** ********/
 
 reg                audio_wrclk;
