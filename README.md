@@ -38,6 +38,7 @@ Planned
 - Standard ATA at ports 1f0h-1f7h
 - Compatibility improvements
 - Boot ROM in the FPGA so hacked VGABIOS isn't required
+- VGA output
 
 Used resources
 - Harddisk: ports 170h-171h
