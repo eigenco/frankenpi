@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP IS61WV10248EDBLL-10TLI
+D SRAM 8M, 2.4V-3.6V, 10ns LP Async SRAM
+K
+F https://componentsearchengine.com/Datasheets/1/IS61WV10248EDBLL-10TLI.pdf
+$ENDCMP
+#
+#End Doc Library

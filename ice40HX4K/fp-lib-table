@@ -1,0 +1,5 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "BasicISA8")(type "KiCad")(uri "${KIPRJMOD}/BasicISA8.pretty")(options "")(descr ""))
+  (lib (name "MODELS")(type "KiCad")(uri "${KIPRJMOD}/models")(options "")(descr ""))
+)

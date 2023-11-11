@@ -1,0 +1,18 @@
+(footprint "HOLE_3MM" (version 20211014) (generator pcbnew)
+  (layer "F.Cu")
+  (tedit 504AE92A)
+  (descr "module 1 pin (ou trou mecanique de percage)")
+  (tags "DEV")
+  (property "Sheetfile" "CPU.kicad_sch")
+  (property "Sheetname" "")
+  (fp_text reference "REF**" (at 0 -5.08) (layer "F.SilkS") hide
+    (effects (font (size 1.016 1.016) (thickness 0.2032)))
+    (tstamp b617ebff-efe8-48ec-8828-db2510f4e5fe)
+  )
+  (fp_text value "CONN_1" (at 0 -3.175) (layer "F.SilkS") hide
+    (effects (font (size 1.016 1.016) (thickness 0.2032)))
+    (tstamp 549589c5-d30d-4401-be31-4349d5db2c50)
+  )
+  (fp_circle (center 0 0) (end 0 -2.286) (layer "F.SilkS") (width 0.381) (fill none) (tstamp 455ff09c-a00f-47b0-8a79-5ebd4c6255d7))
+  (pad "1" thru_hole circle (at 0 0) (size 4.064 4.064) (drill 3.048) (layers *.Cu *.Mask "F.SilkS") (tstamp be7a1bd6-69f5-44e3-beab-9c783bc70f95))
+)
