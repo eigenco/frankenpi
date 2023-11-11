@@ -1,0 +1,99 @@
+set_io ISA_D[0] 139
+set_io ISA_D[1] 141
+set_io ISA_D[2] 142
+set_io ISA_D[3] 143
+set_io ISA_D[4] 144
+set_io ISA_D[5] 1
+set_io ISA_D[6] 2
+set_io ISA_D[7] 3
+
+set_io ISA_A[0] 104
+set_io ISA_A[1] 105
+set_io ISA_A[2] 106
+set_io ISA_A[3] 107
+set_io ISA_A[4] 112
+set_io ISA_A[5] 113
+set_io ISA_A[6] 114
+set_io ISA_A[7] 115
+set_io ISA_A[8] 116
+set_io ISA_A[9] 117
+set_io ISA_A[10] 118
+set_io ISA_A[11] 119
+set_io ISA_A[12] 120
+set_io ISA_A[13] 121
+set_io ISA_A[14] 122
+set_io ISA_A[15] 128
+set_io ISA_A[16] 129
+set_io ISA_A[17] 134
+set_io ISA_A[18] 135
+set_io ISA_A[19] 136
+
+set_io ISA_MEMW 97
+set_io ISA_MEMR 98
+set_io ISA_IOW 99
+set_io ISA_IOR 101
+
+set_io VGA_VS 7
+set_io VGA_HS 8
+
+set_io VGA_B[0] 9
+set_io VGA_B[1] 10
+set_io VGA_B[2] 11
+set_io VGA_B[3] 12
+set_io VGA_B[4] 19
+set_io VGA_B[5] 20
+
+set_io VGA_G[0] 21
+set_io VGA_G[1] 22
+set_io VGA_G[2] 23
+set_io VGA_G[3] 24
+set_io VGA_G[4] 25
+set_io VGA_G[5] 26
+
+set_io VGA_R[0] 28
+set_io VGA_R[1] 29
+set_io VGA_R[2] 31
+set_io VGA_R[3] 32
+set_io VGA_R[4] 33
+set_io VGA_R[5] 34
+
+set_io RPI_GPIO[0] 56
+set_io RPI_GPIO[1] 58
+set_io RPI_GPIO[2] 37
+set_io RPI_GPIO[3] 38
+set_io RPI_GPIO[4] 39
+set_io RPI_GPIO[5] 60
+set_io RPI_GPIO[6] 61
+set_io RPI_GPIO[7] 52
+set_io RPI_GPIO[8] 50
+set_io RPI_GPIO[9] 67
+set_io RPI_GPIO[10] 68
+set_io RPI_GPIO[11] 70
+set_io RPI_GPIO[12] 62
+set_io RPI_GPIO[13] 49
+set_io RPI_GPIO[14] 41
+set_io RPI_GPIO[15] 42
+set_io RPI_GPIO[16] 45
+set_io RPI_GPIO[17] 43
+set_io RPI_GPIO[18] 44
+set_io RPI_GPIO[22] 47
+set_io RPI_GPIO[23] 48
+set_io RPI_GPIO[25] 71
+set_io RPI_GPIO[27] 66
+
+set_io ISA_RESET 63
+set_io ISA_OSC 64
+set_io ISA_IRQ4 74
+set_io ISA_IRQ5 75
+set_io ISA_IRQ7 76
+set_io ISA_CLK 78
+set_io ISA_DRQ1 79
+set_io ISA_DACK1 80
+set_io ISA_DRQ2 96
+set_io ISA_DACK2 73
+set_io ISA_DRQ3 81
+set_io ISA_DACK3 102
+set_io ISA_AEN 137
+set_io ISA_READY 138
+
+set_io CLK 93

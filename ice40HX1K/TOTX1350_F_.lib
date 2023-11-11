@@ -1,0 +1,26 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#SamacSys ECAD Model TOTX1350_F_
+#/321577/208341/2.49/5/4/Capacitor
+DEF TOTX1350_F_ C 0 30 Y Y 1 F N
+F0 "C" 1150 300 50 H V L CNN
+F1 "TOTX1350_F_" 1150 200 50 H V L CNN
+F2 "TOTX1350F" 1150 100 50 H I L CNN
+F3 "https://toshiba.semicon-storage.com/info/docget.jsp?did=14728&prodName=TOTX1350(F)" 1150 0 50 H I L CNN
+F4 "Fiber Optic Transmitters, Receivers, Transceivers TOSLINK General Purpose Modules" 1150 -100 50 H I L CNN "Description"
+F5 "8.8" 1150 -200 50 H I L CNN "Height"
+F6 "757-TOTX1350F" 1150 -300 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.co.uk/ProductDetail/Toshiba/TOTX1350F?qs=vPP9GyyTAo307LQnxNQJcg%3D%3D" 1150 -400 50 H I L CNN "Mouser Price/Stock"
+F8 "Toshiba" 1150 -500 50 H I L CNN "Manufacturer_Name"
+F9 "TOTX1350(F)" 1150 -600 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+X NC_1 1 0 -200 200 R 50 50 0 0 P
+X CATHODE 2 0 -100 200 R 50 50 0 0 P
+X ANODE 3 0 0 200 R 50 50 0 0 P
+X NC_2 4 1300 0 200 L 50 50 0 0 P
+X NC_3 5 1300 -100 200 L 50 50 0 0 P
+P 5 0 1 6 200 100 1100 100 1100 -300 200 -300 200 100 N
+ENDDRAW
+ENDDEF
+#
+#End Library
